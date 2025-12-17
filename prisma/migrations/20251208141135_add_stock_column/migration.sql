@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `menus` ADD COLUMN `stock` INTEGER NOT NULL DEFAULT 0;

@@ -1,0 +1,134 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==============================
+// 1. MANAJEMEN PENGGUNA
+// ==============================
+
+model Role {
+  id        Int     @id @default(autoincrement())
+  role_name String  @unique // Admin, Kasir, Pelanggan
+  users     User[]
+
+  @@map("roles")
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  role_id    Int
+  name       String
+  email      String   @unique
+  password   String   // Password terenkripsi (bcrypt)
+  phone      String?  // <--- WAJIB ADA: No Telepon User (Login/Register)
+  image      String?  // Foto profil
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  role    Role     @relation(fields: [role_id], references: [id])
+  orders  Order[]
+  reports Report[]
+
+  @@map("users")
+}
+
+// ==============================
+// 2. MANAJEMEN MENU & PRODUK
+// ==============================
+
+model Menu {
+  id          Int      @id @default(autoincrement())
+  category    String   // Food, Snack, Coffee, Non-coffee
+  name        String
+  description String?  @db.Text
+  image       String?  // URL gambar
+  price       Decimal  @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  is_available Boolean @default(true)
+  
+  orderItems  OrderItem[]
+
+  @@map("menus")
+}
+
+// ==============================
+// 3. TRANSAKSI & PEMESANAN
+// ==============================
+
+model Order {
+  id             Int      @id @default(autoincrement())
+  user_id        Int?     // Opsional (Bisa null jika pelanggan tamu)
+  type_order     String   // Dine In / Take Away
+  table_number   String?  // Nomor meja (Khusus Dine In)
+  customer_name  String   // Nama pemesan
+  customer_phone String?  // <--- WAJIB ADA: No Telepon Pelanggan saat Checkout
+  status         String   // Pending, Paid, Completed, Cancelled
+  total_price    Decimal  @db.Decimal(10, 2)
+  created_at     DateTime @default(now())
+
+  user       User?       @relation(fields: [user_id], references: [id])
+  orderItems OrderItem[]
+  payment    Payment?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id       Int     @id @default(autoincrement())
+  order_id Int
+  menu_id  Int
+  quantity Int
+  subtotal Decimal @db.Decimal(10, 2)
+
+  order Order @relation(fields: [order_id], references: [id])
+  menu  Menu  @relation(fields: [menu_id], references: [id])
+
+  @@map("order_items")
+}
+
+model Payment {
+  id       Int      @id @default(autoincrement())
+  order_id Int      @unique
+  method   String   // QRIS, Cash
+  status   String   // Success, Failed
+  amount   Float
+  date     DateTime @default(now())
+
+  order Order @relation(fields: [order_id], references: [id])
+
+  @@map("payments")
+}
+
+// ==============================
+// 4. FITUR TAMBAHAN (Event & Laporan)
+// ==============================
+
+model Event {
+  id      Int      @id @default(autoincrement())
+  title   String
+  content String   @db.Text
+  image   String?
+  date    DateTime @default(now())
+
+  @@map("events")
+}
+
+model Report {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  type       String   // Laporan Penjualan, dll
+  period     String
+  file_path  String
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("reports")
+}
