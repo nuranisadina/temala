@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "@/lib/prisma"; 
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 const handler = NextAuth({
@@ -17,11 +17,11 @@ const handler = NextAuth({
         try {
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
-            include: { role: true } 
+            include: { role: true }
           });
 
           if (!user || !user.password) return null;
-          
+
           const isMatch = await bcrypt.compare(credentials.password, user.password);
           if (!isMatch) return null;
 
@@ -44,19 +44,33 @@ const handler = NextAuth({
     })
   ],
   callbacks: {
+    async signIn({ user }) {
+      // Auto redirect based on role after successful login
+      return true; // Allow sign in, redirect handled in other callback
+    },
     async jwt({ token, user }) {
       if (user) {
         // @ts-ignore
-        token.role = user.role; 
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         // @ts-ignore
-        session.user.role = token.role; 
+        session.user.role = token.role;
       }
       return session;
+    },
+    async redirect({ url, baseUrl }) {
+      // If redirecting after sign in, check the user's role from the URL params
+      // This is a workaround since we can't access the session here directly
+
+      // If already on a specific page, stay there
+      if (url.startsWith(baseUrl)) return url;
+
+      // Default to home page, client-side will handle role-based redirect
+      return baseUrl;
     }
   },
   session: { strategy: "jwt" },

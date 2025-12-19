@@ -19,27 +19,27 @@ export async function GET(request: Request) {
       include: {
         user: true,
         payment: true, // Tambahkan include payment agar info bayar muncul di Dashboard Kasir
-        orderItems: { 
-          include: { 
-            menu: true 
-          } 
-        } 
+        orderItems: {
+          include: {
+            menu: true
+          }
+        }
       },
       orderBy: { created_at: 'desc' }
     })
 
     // Format data agar sesuai dengan ekspektasi Frontend (menggunakan 'items')
-    const formattedOrders = orders.map(order => ({
-        ...order,
-        // Ubah orderItems menjadi items agar seragam dengan fungsi POST
-        items: order.orderItems.map(item => ({
-            id: item.menu_id,
-            name: item.menu.name,
-            price: Number(item.menu.price),
-            quantity: item.quantity,
-            subtotal: Number(item.subtotal),
-            image: item.menu.image
-        }))
+    const formattedOrders = orders.map((order: any) => ({
+      ...order,
+      // Ubah orderItems menjadi items agar seragam dengan fungsi POST
+      items: order.orderItems.map((item: any) => ({
+        id: item.menu_id,
+        name: item.menu.name,
+        price: Number(item.menu.price),
+        quantity: item.quantity,
+        subtotal: Number(item.subtotal),
+        image: item.menu.image
+      }))
     }))
 
     return NextResponse.json(formattedOrders)
@@ -53,7 +53,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    
+
     // Validasi Dasar
     if (!body.items || body.items.length === 0) {
       return NextResponse.json({ error: "Keranjang belanja kosong" }, { status: 400 })
@@ -64,17 +64,17 @@ export async function POST(request: Request) {
     const initialStatus = body.type_order === 'Online Order' ? 'Pending' : 'Completed'
 
     // Mulai Transaksi Database (Atomic Transaction)
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       let calculatedTotal = 0
 
       // A. Validasi Stok dan Harga
       for (const item of body.items) {
         const menu = await tx.menu.findUnique({ where: { id: item.id } })
-        
+
         if (!menu) {
           throw new Error(`Menu ${item.name || item.id} tidak ditemukan`)
         }
-        
+
         if (menu.stock < item.quantity) {
           throw new Error(`Stok ${menu.name} tidak mencukupi (Tersisa: ${menu.stock})`)
         }
@@ -86,8 +86,8 @@ export async function POST(request: Request) {
       const newOrder = await tx.order.create({
         data: {
           customer_name: body.customer_name || 'Pelanggan Umum',
-          customer_phone: body.customer_phone || '-', 
-          type_order: body.type_order || 'Dine In', 
+          customer_phone: body.customer_phone || '-',
+          type_order: body.type_order || 'Dine In',
           table_number: body.table_number ? String(body.table_number) : null,
           status: initialStatus,
           total_price: calculatedTotal,
@@ -116,22 +116,22 @@ export async function POST(request: Request) {
 
       // D. Simpan Pembayaran (Hanya jika langsung lunas/dari Kasir)
       if (initialStatus === 'Completed') {
-          await tx.payment.create({
-            data: {
-              order_id: newOrder.id,
-              method: body.payment_method || 'Cash', 
-              status: 'Success',
-            }
-          })
+        await tx.payment.create({
+          data: {
+            order_id: newOrder.id,
+            method: body.payment_method || 'Cash',
+            status: 'Success',
+          }
+        })
       }
 
       return newOrder
     })
 
-    return NextResponse.json({ 
-      success: true, 
-      message: "Transaksi berhasil diproses", 
-      orderId: result.id 
+    return NextResponse.json({
+      success: true,
+      message: "Transaksi berhasil diproses",
+      orderId: result.id
     }, { status: 201 })
 
   } catch (error: any) {

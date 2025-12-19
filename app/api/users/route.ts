@@ -3,25 +3,28 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
+export const dynamic = 'force-dynamic'
+
+
 // GET: Ambil semua user
 export async function GET() {
   try {
     const users = await prisma.user.findMany({
-      include: { role: true }, 
+      include: { role: true },
       orderBy: { created_at: 'desc' }
     })
-    
+
     // PERBAIKAN DI SINI: Kita "gepengkan" datanya jadi string biasa
-    const safeUsers = users.map(user => ({
+    const safeUsers = users.map((user: any) => ({
       id: user.id,
       name: user.name,
       email: user.email,
       // @ts-ignore
       phone: user.phone || '-',
-      
+
       // Ambil nama role dengan aman
-      role_name: user.role ? user.role.role_name : 'User', 
-      
+      role_name: user.role ? user.role.role_name : 'User',
+
       role_id: user.role_id,
       created_at: user.created_at
     }))
@@ -36,23 +39,23 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    
+
     // --- PERBAIKAN LOGIKA ROLE ---
     // Frontend mengirim 'role_name' (String), kita harus cari ID-nya di database
     let targetRoleId = body.role_id
 
     if (body.role_name) {
-        // Cari ID berdasarkan nama role (misal: "Pelanggan")
-        let roleData = await prisma.role.findFirst({
-            where: { role_name: body.role_name }
-        })
+      // Cari ID berdasarkan nama role (misal: "Pelanggan")
+      let roleData = await prisma.role.findFirst({
+        where: { role_name: body.role_name }
+      })
 
-        // Jika Role "Pelanggan" belum ada di database, buat otomatis
-        if (!roleData && body.role_name === 'Pelanggan') {
-            roleData = await prisma.role.create({ data: { role_name: 'Pelanggan' } })
-        }
+      // Jika Role "Pelanggan" belum ada di database, buat otomatis
+      if (!roleData && body.role_name === 'Pelanggan') {
+        roleData = await prisma.role.create({ data: { role_name: 'Pelanggan' } })
+      }
 
-        if (roleData) targetRoleId = roleData.id
+      if (roleData) targetRoleId = roleData.id
     }
     // -----------------------------
 

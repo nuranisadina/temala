@@ -14,7 +14,7 @@ export async function DELETE(
 
     // Cek apakah ID valid?
     if (isNaN(userId)) {
-        return NextResponse.json({ error: "ID User tidak valid" }, { status: 400 })
+      return NextResponse.json({ error: "ID User tidak valid" }, { status: 400 })
     }
 
     // 1. Cari dulu apakah user ini punya pesanan/transaksi?
@@ -23,7 +23,7 @@ export async function DELETE(
       select: { id: true }
     })
 
-    const orderIds = userOrders.map(o => o.id)
+    const orderIds = userOrders.map((o: { id: number }) => o.id)
 
     // 2. JIKA ADA TRANSAKSI, HAPUS DULU SEMUA JEJAKNYA (Bersih-bersih)
     if (orderIds.length > 0) {

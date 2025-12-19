@@ -1,11 +1,12 @@
-// app/kasir/page.tsx
 'use client'
 
+
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { 
-  Printer, CheckCircle, Clock, History, ShoppingCart, 
-  Plus, Minus, Trash2, Search, X, Loader2, User, Store
+import {
+  Printer, CheckCircle, Clock, History, ShoppingCart,
+  Plus, Minus, Trash2, Search, X, Loader2, User, Store, ClipboardList
 } from 'lucide-react'
+import Link from 'next/link'
 
 // --- TIPE DATA ---
 interface Menu {
@@ -42,7 +43,7 @@ export default function KasirPage() {
   const [menus, setMenus] = useState<Menu[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'incoming' | 'history' | 'pos'>('incoming')
-  
+
   // State untuk Fitur POS
   const [cart, setCart] = useState<CartItem[]>([])
   const [customerName, setCustomerName] = useState('')
@@ -57,7 +58,7 @@ export default function KasirPage() {
       ])
       const orderData = await orderRes.json()
       const menuData = await menuRes.json()
-      
+
       if (Array.isArray(orderData)) setOrders(orderData)
       if (Array.isArray(menuData)) setMenus(menuData)
     } catch (err) {
@@ -93,7 +94,7 @@ export default function KasirPage() {
 
   const handleCheckoutManual = async () => {
     if (!customerName || cart.length === 0) return alert("Isi nama dan pilih menu!")
-    
+
     const res = await fetch('/api/orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -119,7 +120,7 @@ export default function KasirPage() {
   const historyOrders = orders.filter(o => o.status === 'Completed')
 
   const completeOrder = async (id: number) => {
-    const res = await fetch(`/api/orders/${id}`, {
+    const res = await fetch(`/ api / orders / ${id} `, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: 'Completed' })
@@ -132,99 +133,100 @@ export default function KasirPage() {
     const printWindow = window.open('', '_blank')
     if (printWindow) {
       printWindow.document.write(`
-        <html>
-          <body style="font-family:monospace; width:80mm; padding:10px;">
-            <h2 style="text-align:center;">TEMALA COFFEE</h2>
-            <p style="text-align:center; font-size:10px;">Jl. Temala No. 1, Pekanbaru</p>
-            <hr/>
-            <p>Nota: #${order.id} | ${new Date(order.created_at).toLocaleTimeString()}</p>
-            <p>Pelanggan: ${order.customer_name}</p>
-            <hr/>
-            ${order.orderItems.map(item => `
-              <div style="display:flex; justify-content:space-between;">
-                <span>${item.quantity}x ${item.menu.name}</span>
-                <span>${item.subtotal.toLocaleString()}</span>
-              </div>
-            `).join('')}
-            <hr/>
-            <div style="display:flex; justify-content:space-between; font-weight:bold;">
-              <span>TOTAL</span>
-              <span>Rp ${order.total_price.toLocaleString()}</span>
+  < html >
+  <body style="font-family:monospace; width:80mm; padding:10px;">
+    <h2 style="text-align:center;">TEMALA COFFEE</h2>
+    <p style="text-align:center; font-size:10px;">Jl. Temala No. 1, Pekanbaru</p>
+    <hr />
+    <p>Nota: #${order.id} | ${new Date(order.created_at).toLocaleTimeString()}</p>
+    <p>Pelanggan: ${order.customer_name}</p>
+    <hr />
+    ${order.orderItems.map(item => `
+            <div style="display:flex; justify-content:space-between;">
+              <span>${item.quantity}x ${item.menu.name}</span>
+              <span>${item.subtotal.toLocaleString()}</span>
             </div>
-            <p style="text-align:center; margin-top:20px;">Terima Kasih!</p>
-            <script>window.onload = () => { window.print(); window.close(); }</script>
-          </body>
-        </html>
-      `)
+          `).join('')}
+    <hr />
+    <div style="display:flex; justify-content:space-between; font-weight:bold;">
+      <span>TOTAL</span>
+      <span>Rp ${order.total_price.toLocaleString()}</span>
+    </div>
+    <p style="text-align:center; margin-top:20px;">Terima Kasih!</p>
+    <script>window.onload = () => {window.print(); window.close(); }</script>
+  </body>
+        </html >
+  `)
       printWindow.document.close()
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 font-sans flex flex-col">
+    <div className="h-full flex flex-col font-sans">
       {/* HEADER NAV */}
-      <header className="bg-blue-800 text-white p-4 shadow-lg flex justify-between items-center">
-        <h1 className="text-xl font-black tracking-tighter uppercase">TML. KASIR</h1>
-        <div className="flex bg-blue-900/50 rounded-lg p-1">
-          <button 
+      {/* TAB NAVIGATION */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Point of Sale</h2>
+        <div className="flex bg-white dark:bg-slate-800 rounded-xl p-1 shadow-sm border border-slate-200 dark:border-slate-700">
+          <button
             onClick={() => setActiveTab('incoming')}
-            className={`px-4 py-2 rounded-md text-sm font-bold transition ${activeTab === 'incoming' ? 'bg-white text-blue-800' : 'hover:bg-blue-800'}`}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 ${activeTab === 'incoming' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-50'}`}
           >
-            Pesanan Masuk ({incomingOrders.length})
+            <Clock size={16} /> Pesanan Masuk <span className="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">{incomingOrders.length}</span>
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('pos')}
-            className={`px-4 py-2 rounded-md text-sm font-bold transition ${activeTab === 'pos' ? 'bg-white text-blue-800' : 'hover:bg-blue-800'}`}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 ${activeTab === 'pos' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-50'}`}
           >
-            Input POS
+            <Store size={16} /> Input POS
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 rounded-md text-sm font-bold transition ${activeTab === 'history' ? 'bg-white text-blue-800' : 'hover:bg-blue-800'}`}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 ${activeTab === 'history' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:bg-slate-50'}`}
           >
-            Riwayat
+            <History size={16} /> Riwayat
           </button>
         </div>
-      </header>
+      </div>
 
       <main className="flex-1 p-4 md:p-6 overflow-hidden">
         {loading ? (
-          <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={40}/></div>
+          <div className="flex h-full items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={40} /></div>
         ) : activeTab === 'pos' ? (
           /* ================= POS SYSTEM ================= */
           <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-140px)]">
             {/* Daftar Produk */}
-            <div className="flex-1 bg-white rounded-2xl shadow-sm p-4 flex flex-col">
+            <div className="flex-1 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 flex flex-col">
               <div className="relative mb-4">
-                <Search className="absolute left-3 top-3 text-slate-400" size={18}/>
-                <input 
-                  type="text" placeholder="Cari menu kopi..." 
+                <Search className="absolute left-3 top-3 text-slate-400" size={18} />
+                <input
+                  type="text" placeholder="Cari menu kopi..."
                   className="w-full pl-10 pr-4 py-2 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto pr-2">
                 {menus.filter(m => m.name.toLowerCase().includes(searchQuery.toLowerCase())).map(menu => (
-                  <button 
-                    key={menu.id} 
+                  <button
+                    key={menu.id}
                     onClick={() => addToCart(menu)}
-                    className="p-3 border rounded-xl text-left hover:bg-blue-50 transition border-slate-100 flex flex-col justify-between h-24"
+                    className="p-3 border border-slate-200 dark:border-slate-700 rounded-xl text-left hover:bg-blue-50 dark:hover:bg-blue-500/10 transition flex flex-col justify-between h-24"
                   >
-                    <span className="font-bold text-sm text-slate-800 uppercase line-clamp-2">{menu.name}</span>
-                    <span className="text-blue-600 font-black text-xs">Rp {menu.price.toLocaleString()}</span>
+                    <span className="font-bold text-sm text-slate-800 dark:text-slate-100 uppercase line-clamp-2">{menu.name}</span>
+                    <span className="text-blue-600 dark:text-blue-400 font-black text-xs">Rp {menu.price.toLocaleString()}</span>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Keranjang POS */}
-            <div className="w-full md:w-80 bg-white rounded-2xl shadow-xl flex flex-col">
-              <div className="p-4 border-b bg-slate-50 rounded-t-2xl">
-                <h2 className="font-black text-slate-800 flex items-center gap-2 uppercase"><ShoppingCart size={18}/> Keranjang</h2>
+            <div className="w-full md:w-80 bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 flex flex-col">
+              <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 rounded-t-2xl">
+                <h2 className="font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 uppercase"><ShoppingCart size={18} /> Keranjang</h2>
               </div>
               <div className="p-4 space-y-4 flex-1 overflow-y-auto">
-                <input 
-                  type="text" placeholder="Nama Pelanggan" 
+                <input
+                  type="text" placeholder="Nama Pelanggan"
                   value={customerName} onChange={(e) => setCustomerName(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-100 rounded-lg text-sm border-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -236,20 +238,20 @@ export default function KasirPage() {
                         <p className="text-[10px] text-blue-600">Rp {(item.price * item.quantity).toLocaleString()}</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        <button onClick={() => updateQty(item.id, -1)} className="p-1 bg-white border rounded"><Minus size={12}/></button>
+                        <button onClick={() => updateQty(item.id, -1)} className="p-1 bg-white border rounded"><Minus size={12} /></button>
                         <span className="text-xs font-bold">{item.quantity}</span>
-                        <button onClick={() => addToCart(item)} className="p-1 bg-white border rounded"><Plus size={12}/></button>
+                        <button onClick={() => addToCart(item)} className="p-1 bg-white border rounded"><Plus size={12} /></button>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-              <div className="p-4 border-t bg-slate-50 rounded-b-2xl">
+              <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 rounded-b-2xl">
                 <div className="flex justify-between mb-4">
                   <span className="font-bold text-slate-500 uppercase">Total</span>
                   <span className="font-black text-xl text-blue-700">Rp {totalCartPrice.toLocaleString()}</span>
                 </div>
-                <button 
+                <button
                   onClick={handleCheckoutManual}
                   disabled={cart.length === 0}
                   className="w-full bg-blue-700 text-white py-3 rounded-xl font-bold hover:bg-blue-800 transition disabled:bg-slate-300"
@@ -263,16 +265,16 @@ export default function KasirPage() {
           /* ================= MONITORING PESANAN ================= */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto">
             {incomingOrders.length === 0 ? (
-              <div className="col-span-full text-center py-20 opacity-50"><Clock size={48} className="mx-auto mb-2"/> <p>Belum ada pesanan masuk...</p></div>
+              <div className="col-span-full text-center py-20 opacity-50"><Clock size={48} className="mx-auto mb-2" /> <p>Belum ada pesanan masuk...</p></div>
             ) : incomingOrders.map(order => (
-              <div key={order.id} className="bg-white rounded-2xl shadow-md border-t-4 border-orange-500 p-5 flex flex-col justify-between">
+              <div key={order.id} className="bg-white dark:bg-slate-800 rounded-2xl shadow-md border border-slate-200 dark:border-slate-700 border-t-4 border-t-blue-600 dark:border-t-blue-500 p-5 flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start mb-3">
                     <span className="px-2 py-1 bg-slate-100 text-[10px] font-bold rounded">#{order.id}</span>
                     <span className="text-[10px] text-slate-400 font-bold">{new Date(order.created_at).toLocaleTimeString()}</span>
                   </div>
-                  <h3 className="text-lg font-black text-slate-800 uppercase line-clamp-1">{order.customer_name}</h3>
-                  <p className="text-xs text-blue-600 font-bold mb-4">{order.type_order} • Meja {order.table_number || '-'}</p>
+                  <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 uppercase line-clamp-1">{order.customer_name}</h3>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 font-bold mb-4">{order.type_order} • Meja {order.table_number || '-'}</p>
                   <div className="space-y-2 border-y py-3 mb-4">
                     {order.orderItems.map(item => (
                       <div key={item.id} className="flex justify-between text-sm">
@@ -283,17 +285,17 @@ export default function KasirPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 pt-2">
-                  <button onClick={() => handlePrint(order)} className="flex-1 bg-slate-100 text-slate-700 py-2 rounded-xl font-bold hover:bg-slate-200 flex items-center justify-center gap-2"><Printer size={16}/> Struk</button>
-                  <button onClick={() => completeOrder(order.id)} className="flex-[2] bg-green-600 text-white py-2 rounded-xl font-bold hover:bg-green-700 flex items-center justify-center gap-2"><CheckCircle size={16}/> SELESAI</button>
+                  <button onClick={() => handlePrint(order)} className="flex-1 bg-slate-100 text-slate-700 py-2 rounded-xl font-bold hover:bg-slate-200 flex items-center justify-center gap-2"><Printer size={16} /> Struk</button>
+                  <button onClick={() => completeOrder(order.id)} className="flex-[2] bg-emerald-600 dark:bg-emerald-500 text-white py-2 rounded-xl font-bold hover:bg-emerald-700 dark:hover:bg-emerald-600 flex items-center justify-center gap-2"><CheckCircle size={16} /> SELESAI</button>
                 </div>
               </div>
             ))}
           </div>
         ) : (
           /* ================= RIWAYAT PENJUALAN ================= */
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-             <table className="w-full text-left">
-              <thead className="bg-slate-50 border-b">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <table className="w-full text-left">
+              <thead className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
                 <tr className="text-xs font-bold text-slate-500 uppercase">
                   <th className="p-4">ID</th>
                   <th className="p-4">Waktu</th>
@@ -304,13 +306,13 @@ export default function KasirPage() {
               </thead>
               <tbody className="divide-y text-sm">
                 {historyOrders.map(order => (
-                  <tr key={order.id} className="hover:bg-slate-50">
+                  <tr key={order.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition">
                     <td className="p-4 font-mono font-bold">#{order.id}</td>
                     <td className="p-4">{new Date(order.created_at).toLocaleString()}</td>
                     <td className="p-4 font-bold text-slate-700">{order.customer_name}</td>
-                    <td className="p-4 text-right font-black text-blue-700">Rp {order.total_price.toLocaleString()}</td>
+                    <td className="p-4 text-right font-black text-blue-700 dark:text-blue-400">Rp {order.total_price.toLocaleString()}</td>
                     <td className="p-4 text-center">
-                      <button onClick={() => handlePrint(order)} className="text-slate-400 hover:text-blue-600"><Printer size={18}/></button>
+                      <button onClick={() => handlePrint(order)} className="text-slate-400 hover:text-blue-600"><Printer size={18} /></button>
                     </td>
                   </tr>
                 ))}
