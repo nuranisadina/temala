@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { signIn, getSession } from 'next-auth/react'
-import { Coffee, ArrowRight, Loader2, Eye, EyeOff, Mail, Lock, Home } from 'lucide-react'
+import { ArrowRight, Loader2, Eye, EyeOff, Mail, Lock, Home, Coffee, CheckCircle2 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -57,51 +57,104 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-blue-100/50 p-4 relative overflow-hidden">
-      {/* Decorative Background Elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"></div>
+    <div className="min-h-screen flex bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
+      {/* --- LEFT SIDE: IMAGE & BRANDING --- */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        {/* Background Image */}
+        <Image
+          src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=2070&auto=format&fit=crop"
+          alt="Coffee Shop Atmosphere"
+          fill
+          className="object-cover brightness-50 scale-105 hover:scale-110 transition-transform duration-[10s] ease-linear"
+          priority
+        />
 
-      {/* Back to Home Button */}
-      <Link
-        href="/"
-        className="absolute top-6 left-6 z-20 flex items-center gap-2 px-4 py-2.5 bg-white/80 backdrop-blur-xl border border-white/50 rounded-full shadow-lg shadow-slate-200/50 text-slate-700 hover:bg-white hover:shadow-xl transition-all group"
-      >
-        <Home size={18} className="group-hover:scale-110 transition-transform" />
-        <span className="font-bold text-sm">Kembali ke Beranda</span>
-      </Link>
+        {/* Overlay Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
 
-      {/* Main Card */}
-      <div className="w-full max-w-md relative z-10">
-        {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          {/* Logo removed */}
-          <h1 className="text-3xl font-black text-slate-900 mb-1">Temala Coffee</h1>
-          <p className="text-slate-600">Masuk untuk melanjutkan</p>
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 group-hover:scale-110 transition-all duration-300">
+              <Image src="/logo.png" alt="Logo" width={32} height={32} className="rounded-lg" />
+            </div>
+            <span className="text-2xl font-black text-white tracking-tighter">TEMALA.</span>
+          </Link>
+
+          <div className="space-y-6 max-w-lg">
+            <h2 className="text-5xl font-black text-white leading-tight tracking-tight">
+              Nikmati Kopi Terbaik <br />
+              <span className="text-blue-400">Setiap Hari.</span>
+            </h2>
+            <p className="text-slate-300 text-lg leading-relaxed">
+              Masuk ke akun Anda untuk mengelola pesanan, melihat promo terbaru, dan menikmati layanan eksklusif dari Temala Coffee.
+            </p>
+
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              <div className="flex items-center gap-2 text-white/80 text-sm font-medium">
+                <CheckCircle2 size={18} className="text-blue-400" />
+                <span>Biji Kopi Pilihan</span>
+              </div>
+              <div className="flex items-center gap-2 text-white/80 text-sm font-medium">
+                <CheckCircle2 size={18} className="text-blue-400" />
+                <span>Pelayanan Cepat</span>
+              </div>
+              <div className="flex items-center gap-2 text-white/80 text-sm font-medium">
+                <CheckCircle2 size={18} className="text-blue-400" />
+                <span>Suasana Nyaman</span>
+              </div>
+              <div className="flex items-center gap-2 text-white/80 text-sm font-medium">
+                <CheckCircle2 size={18} className="text-blue-400" />
+                <span>Promo Eksklusif</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-slate-500 text-sm font-medium">
+            © 2025 Temala Coffee. All rights reserved.
+          </div>
+        </div>
+      </div>
+
+      {/* --- RIGHT SIDE: LOGIN FORM --- */}
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 md:p-12 bg-slate-50 relative">
+        {/* Mobile Logo */}
+        <div className="lg:hidden absolute top-8 left-8">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/logo.png" alt="Logo" width={32} height={32} className="rounded-lg" />
+            <span className="text-xl font-black text-slate-900 tracking-tighter">TEMALA.</span>
+          </Link>
         </div>
 
-        {/* Login Card */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl shadow-slate-200/50 p-8 border border-white/50">
-          <div className="mb-6">
-            <h2 className="text-2xl font-black text-slate-900 mb-1">Selamat Datang</h2>
-            <p className="text-slate-500 text-sm">Silakan masukkan kredensial Anda</p>
+        {/* Back to Home (Desktop) */}
+        <Link
+          href="/"
+          className="hidden lg:flex absolute top-8 right-8 items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+        >
+          <Home size={16} />
+          <span>Beranda</span>
+        </Link>
+
+        <div className="w-full max-w-md space-y-8">
+          <div className="text-center lg:text-left">
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Selamat Datang Kembali</h1>
+            <p className="text-slate-500 font-medium">Silakan masuk untuk melanjutkan akses Anda.</p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50/80 backdrop-blur-sm text-red-600 text-sm rounded-2xl border border-red-100 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="p-4 bg-red-50 border border-red-100 text-red-600 text-sm rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse flex-shrink-0"></div>
-              <span className="font-medium">{error}</span>
+              <span className="font-bold">{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            {/* Email Field */}
+          <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <label className="block text-sm font-bold text-slate-700 ml-1">
-                Email
+              <label className="block text-sm font-black text-slate-700 ml-1 uppercase tracking-wider">
+                Email Address
               </label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-400 transition">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-300">
                   <Mail size={20} />
                 </div>
                 <input
@@ -110,18 +163,20 @@ export default function LoginPage() {
                   placeholder="admin@temala.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3.5 border-2 border-slate-200 rounded-2xl outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-400/10 text-slate-800 bg-white/50 backdrop-blur-sm transition-all placeholder:text-slate-400 font-medium"
+                  className="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-200 rounded-2xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 text-slate-800 transition-all duration-300 placeholder:text-slate-400 font-medium shadow-sm"
                 />
               </div>
             </div>
 
-            {/* Password Field */}
             <div className="space-y-2">
-              <label className="block text-sm font-bold text-slate-700 ml-1">
-                Password
-              </label>
+              <div className="flex justify-between items-center ml-1">
+                <label className="block text-sm font-black text-slate-700 uppercase tracking-wider">
+                  Password
+                </label>
+                <Link href="#" className="text-xs font-bold text-blue-600 hover:underline">Lupa Password?</Link>
+              </div>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-400 transition">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors duration-300">
                   <Lock size={20} />
                 </div>
                 <input
@@ -130,54 +185,55 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-12 py-3.5 border-2 border-slate-200 rounded-2xl outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-400/10 text-slate-800 bg-white/50 backdrop-blur-sm transition-all placeholder:text-slate-400 font-medium"
+                  className="w-full pl-12 pr-12 py-4 bg-white border-2 border-slate-200 rounded-2xl outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 text-slate-800 transition-all duration-300 placeholder:text-slate-400 font-medium shadow-sm"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-400 transition"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-500 transition-colors duration-300"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
 
-            {/* Submit Button */}
+            <div className="flex items-center gap-2 ml-1">
+              <input type="checkbox" id="remember" className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+              <label htmlFor="remember" className="text-sm font-bold text-slate-600 cursor-pointer">Ingat Saya</label>
+            </div>
+
             <button
               disabled={loading}
               type="submit"
-              className="w-full py-4 bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-400/40 hover:shadow-xl hover:shadow-blue-500/50 disabled:opacity-70 disabled:cursor-not-allowed mt-6 hover:scale-[1.02] active:scale-[0.98] transform"
+              className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-black flex items-center justify-center gap-2 transition-all duration-300 shadow-xl shadow-slate-200 hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed transform"
             >
               {loading ? (
                 <>
                   <Loader2 className="animate-spin" size={20} />
-                  <span>Memproses...</span>
+                  <span>MEMPROSES...</span>
                 </>
               ) : (
                 <>
-                  <span>Masuk Sekarang</span>
+                  <span>MASUK SEKARANG</span>
                   <ArrowRight size={20} />
                 </>
               )}
             </button>
           </form>
 
-          {/* Register Link */}
-          <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-            <p className="text-slate-600 text-sm">
+          <div className="pt-6 text-center">
+            <p className="text-slate-500 font-medium">
               Belum punya akun?{' '}
-              <Link href="/register" className="text-blue-400 font-bold hover:text-blue-500 hover:underline transition">
+              <Link href="/register" className="text-blue-600 font-black hover:text-blue-700 transition-colors">
                 Daftar Sekarang
               </Link>
             </p>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-6 text-center">
-          <p className="text-slate-400 text-xs">
-            © 2025 Temala Coffee. All rights reserved.
-          </p>
+        {/* Mobile Footer */}
+        <div className="lg:hidden mt-12 text-slate-400 text-xs font-medium">
+          © 2025 Temala Coffee. All rights reserved.
         </div>
       </div>
     </div>

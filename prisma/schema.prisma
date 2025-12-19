@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -47,9 +47,9 @@ model Menu {
   id          Int      @id @default(autoincrement())
   category    String   // Food, Snack, Coffee, Non-coffee
   name        String
-  description String?  @db.Text
+  description String?
   image       String?  // URL gambar
-  price       Decimal  @db.Decimal(10, 2)
+  price       Float
   stock       Int      @default(0)
   is_available Boolean @default(true)
   
@@ -70,7 +70,7 @@ model Order {
   customer_name  String   // Nama pemesan
   customer_phone String?  // <--- WAJIB ADA: No Telepon Pelanggan saat Checkout
   status         String   // Pending, Paid, Completed, Cancelled
-  total_price    Decimal  @db.Decimal(10, 2)
+  total_price    Float
   created_at     DateTime @default(now())
 
   user       User?       @relation(fields: [user_id], references: [id])
@@ -85,7 +85,7 @@ model OrderItem {
   order_id Int
   menu_id  Int
   quantity Int
-  subtotal Decimal @db.Decimal(10, 2)
+  subtotal Float
 
   order Order @relation(fields: [order_id], references: [id])
   menu  Menu  @relation(fields: [menu_id], references: [id])
@@ -113,7 +113,7 @@ model Payment {
 model Event {
   id      Int      @id @default(autoincrement())
   title   String
-  content String   @db.Text
+  content String
   image   String?
   date    DateTime @default(now())
 

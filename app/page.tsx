@@ -102,9 +102,24 @@ export default function HomePage() {
     // Jika sudah login sebagai Admin/Kasir, tampilkan loader agar tidak melihat beranda pelanggan
     if (status === 'authenticated' && (userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'kasir')) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-white">
-                <Loader2 className="animate-spin text-blue-600 mb-4" size={48} />
-                <p className="text-slate-500 font-bold animate-pulse">Mengalihkan ke Dashboard...</p>
+            <div className="min-h-screen flex items-center justify-center bg-slate-950 overflow-hidden relative">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] animate-pulse"></div>
+
+                <div className="relative flex flex-col items-center">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-blue-500/20 rounded-full animate-pulse-ring"></div>
+
+                    <div className="relative w-24 h-24 bg-slate-900 rounded-[2rem] border border-slate-800 shadow-2xl flex items-center justify-center animate-float">
+                        <Coffee size={40} className="text-blue-500" strokeWidth={2.5} />
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex gap-1">
+                            <div className="w-1.5 h-4 bg-blue-400/40 rounded-full animate-steam"></div>
+                            <div className="w-1.5 h-6 bg-blue-400/20 rounded-full animate-steam [animation-delay:0.5s]"></div>
+                        </div>
+                    </div>
+                    <div className="mt-12 text-center space-y-2">
+                        <h2 className="text-xl font-black text-white uppercase tracking-[0.3em] animate-pulse">TEMALA.</h2>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] ml-1">Mengalihkan ke Dashboard...</p>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -118,7 +133,14 @@ export default function HomePage() {
 
                     {/* 1. Logo */}
                     <div className="flex items-center">
-                        {/* Logo removed */}
+                        <Image
+                            src="/logo.png"
+                            alt="Temala Logo"
+                            width={32}
+                            height={32}
+                            className="rounded-lg"
+                        />
+                        <span className="text-xl font-black tracking-tighter ml-3">TEMALA.</span>
                     </div>
 
                     {/* 2. Menu Link (SCROLL KE BAWAH) */}
@@ -554,7 +576,16 @@ export default function HomePage() {
                 <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
                     {/* Brand Section */}
                     <div>
-                        {/* Logo removed */}
+                        <div className="flex items-center gap-3 mb-4">
+                            <Image
+                                src="/logo.png"
+                                alt="Temala Logo"
+                                width={40}
+                                height={40}
+                                className="rounded-lg brightness-90"
+                            />
+                            <span className="text-2xl font-black tracking-tighter">TEMALA.</span>
+                        </div>
                         <p className="text-slate-300 text-sm mb-4">Freshly Brewed for Every Moment</p>
                         <p className="text-slate-400 text-xs leading-relaxed">
                             Kedai Kopi Temala hadir dengan komitmen menyajikan kopi premium terbaik Indonesia sejak 2023.

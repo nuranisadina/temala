@@ -1,94 +1,125 @@
 'use client'
 
+import { ShoppingBag, CheckCircle, Clock, Plus, ArrowRight, History, User } from 'lucide-react'
+import Link from 'next/link'
+
 export default function ClientDashboardPage() {
     return (
-        <div>
+        <div className="space-y-8 animate-in fade-in duration-700">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-black text-white uppercase tracking-tight">Dashboard Overview</h1>
+                    <p className="text-slate-400 font-medium">Selamat datang kembali! Berikut ringkasan aktivitas Anda.</p>
+                </div>
+                <div className="text-left md:text-right">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Tanggal</p>
+                    <p className="font-bold text-slate-300">{new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                </div>
+            </div>
+
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-800 shadow-xl hover:shadow-blue-900/10 transition-all group">
+                    <div className="flex items-center gap-5">
+                        <div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform duration-300">
+                            <ShoppingBag size={28} strokeWidth={2.5} />
                         </div>
                         <div>
-                            <p className="text-sm text-slate-600">Total Pesanan</p>
-                            <p className="text-2xl font-bold text-slate-900">0</p>
+                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Total Pesanan</p>
+                            <p className="text-3xl font-black text-white">0 <span className="text-sm font-medium text-slate-500">Trx</span></p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-800 shadow-xl hover:shadow-emerald-900/10 transition-all group">
+                    <div className="flex items-center gap-5">
+                        <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform duration-300">
+                            <CheckCircle size={28} strokeWidth={2.5} />
                         </div>
                         <div>
-                            <p className="text-sm text-slate-600">Pesanan Selesai</p>
-                            <p className="text-2xl font-bold text-slate-900">0</p>
+                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Pesanan Selesai</p>
+                            <p className="text-3xl font-black text-white">0 <span className="text-sm font-medium text-slate-500">Selesai</span></p>
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-800 shadow-xl hover:shadow-amber-900/10 transition-all group">
+                    <div className="flex items-center gap-5">
+                        <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform duration-300">
+                            <Clock size={28} strokeWidth={2.5} />
                         </div>
                         <div>
-                            <p className="text-sm text-slate-600">Pesanan Pending</p>
-                            <p className="text-2xl font-bold text-slate-900">0</p>
+                            <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-1">Pesanan Pending</p>
+                            <p className="text-3xl font-black text-white">0 <span className="text-sm font-medium text-slate-500">Antrian</span></p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100 mb-8">
-                <h3 className="text-lg font-bold text-slate-900 mb-4">Aksi Cepat</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <a href="/menu" className="flex items-center gap-3 p-4 border-2 border-slate-200 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition group">
-                        <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p className="font-bold text-slate-900">Pesan Sekarang</p>
-                            <p className="text-sm text-slate-600">Lihat menu & buat pesanan</p>
-                        </div>
-                    </a>
-
-                    <a href="/client-dashboard/orders" className="flex items-center gap-3 p-4 border-2 border-slate-200 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition group">
-                        <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p className="font-bold text-slate-900">Lihat Pesanan</p>
-                            <p className="text-sm text-slate-600">Cek status pesanan Anda</p>
-                        </div>
-                    </a>
-                </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
-                <h3 className="text-lg font-bold text-slate-900 mb-4">Aktivitas Terakhir</h3>
-                <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center  mx-auto mb-4">
-                        <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Recent Activity - Takes 2 Cols */}
+                <div className="lg:col-span-2 bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-slate-800 shadow-2xl p-8">
+                    <div className="flex justify-between items-center mb-8">
+                        <h3 className="font-black text-xl text-white flex items-center gap-3 uppercase tracking-tight">
+                            <History size={24} className="text-blue-500" />
+                            Aktivitas Terakhir
+                        </h3>
+                        <Link href="/client-dashboard/orders" className="text-xs font-black text-blue-500 hover:text-blue-400 uppercase tracking-widest border-b-2 border-blue-500/20 pb-1 transition-all">
+                            Lihat Semua
+                        </Link>
                     </div>
-                    <p className="text-slate-500">Belum ada aktivitas</p>
-                    <p className="text-sm text-slate-400 mt-1">Pesanan Anda akan muncul di sini</p>
+
+                    <div className="flex flex-col items-center justify-center py-16 space-y-4 border-2 border-dashed border-slate-800 rounded-2xl bg-slate-950/30">
+                        <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center text-slate-700 shadow-inner">
+                            <ShoppingBag size={40} />
+                        </div>
+                        <div className="text-center">
+                            <p className="text-white font-bold text-lg">Belum ada aktivitas</p>
+                            <p className="text-slate-500 text-sm max-w-[250px] mx-auto mt-1">Pesanan Anda akan muncul di sini setelah Anda melakukan transaksi.</p>
+                        </div>
+                        <Link href="/menu" className="mt-4 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm font-black transition-all shadow-lg shadow-blue-900/20 active:scale-95">
+                            Pesan Sekarang
+                        </Link>
+                    </div>
+                </div>
+
+                {/* Quick Actions & Profile - 1 Col */}
+                <div className="space-y-6">
+                    {/* Promo Card */}
+                    <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-3xl p-8 text-white shadow-2xl shadow-blue-900/40 relative overflow-hidden group">
+                        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+                        <h3 className="font-black text-2xl mb-2 tracking-tight">Promo Spesial!</h3>
+                        <p className="text-blue-100 text-sm mb-6 leading-relaxed">Dapatkan diskon hingga 50% untuk pembelian menu signature hari ini.</p>
+                        <Link href="/menu" className="inline-flex items-center gap-2 bg-white text-blue-700 px-6 py-3 rounded-2xl font-black text-sm hover:bg-blue-50 transition-all shadow-xl active:scale-95">
+                            Cek Promo <ArrowRight size={18} />
+                        </Link>
+                    </div>
+
+                    {/* Quick Links */}
+                    <div className="bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-slate-800 p-8 shadow-2xl">
+                        <h3 className="font-black text-lg text-white mb-6 uppercase tracking-tight">Aksi Cepat</h3>
+                        <div className="space-y-3">
+                            <Link href="/menu" className="flex items-center gap-4 p-4 bg-slate-950/50 hover:bg-slate-800 rounded-2xl border border-slate-800 transition-all group">
+                                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                                    <Plus size={20} strokeWidth={3} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-white">Buat Pesanan</p>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Pilih menu favorit</p>
+                                </div>
+                            </Link>
+                            <Link href="/client-dashboard/profile" className="flex items-center gap-4 p-4 bg-slate-950/50 hover:bg-slate-800 rounded-2xl border border-slate-800 transition-all group">
+                                <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:text-slate-900 transition-all">
+                                    <User size={20} strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-white">Pengaturan Profil</p>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Update data diri</p>
+                                </div>
+                            </Link>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

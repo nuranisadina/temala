@@ -28,8 +28,15 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-white border-r border-slate-200 h-screen fixed left-0 top-0 flex flex-col z-10">
       {/* Logo Area */}
-      <div className="h-16 flex items-center justify-center px-6 border-b border-slate-100">
-        {/* Logo removed */}
+      <div className="h-16 flex items-center gap-3 px-6 border-b border-slate-100">
+        <Image
+          src="/logo.png"
+          alt="Temala Logo"
+          width={40}
+          height={40}
+          className="rounded-lg object-contain"
+        />
+        <span className="font-black text-slate-900 text-lg tracking-tight">Temala Coffee</span>
       </div>
 
       {/* Menu Items */}

@@ -5,9 +5,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { ArrowLeft, Trash2, Plus, Minus, Loader2, Coffee, User, Phone, MapPin, Utensils, ShoppingBag, X, QrCode, Banknote, Wallet } from 'lucide-react'
+import { ArrowLeft, Trash2, Plus, Minus, Loader2, Coffee, User, Phone, MapPin, Utensils, ShoppingBag, X, QrCode, Banknote, Wallet, ArrowRight, CheckCircle2 } from 'lucide-react'
 
-// Tipe Data Cart Item
 interface CartItem {
   id: number
   name: string
@@ -23,22 +22,17 @@ export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // State Modal Checkout
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Form Data
   const [formData, setFormData] = useState({
     name: '',
     tableNumber: '',
     phone: '',
-    type: 'Dine-in',      // Default: Makan di Tempat
-    paymentMethod: 'QRIS' // Default: QRIS
+    type: 'Dine-in',
+    paymentMethod: 'QRIS'
   })
 
-  // 1. Load Keranjang & Auto-fill Nama
   useEffect(() => {
-    // Ambil cart dari localStorage
     const savedCart = localStorage.getItem('cart')
     if (savedCart) {
       try {
@@ -48,66 +42,50 @@ export default function CartPage() {
         localStorage.removeItem('cart')
       }
     }
-
-    // Auto-fill nama user jika login
     if (session?.user?.name) {
       setFormData(prev => ({ ...prev, name: session.user?.name || '' }))
     }
-
     setLoading(false)
   }, [session])
 
-  // Fungsi Update Quantity
   const updateQty = (id: number, delta: number) => {
     const newCart = cart.map(item => {
       if (item.id === id) {
-        // Minimal qty adalah 1
         const newQty = Math.max(1, item.quantity + delta)
         return { ...item, quantity: newQty }
       }
       return item
     })
-
     setCart(newCart)
     localStorage.setItem('cart', JSON.stringify(newCart))
   }
 
-  // Fungsi Hapus Item
   const removeItem = (id: number) => {
     const newCart = cart.filter(item => item.id !== id)
     setCart(newCart)
     localStorage.setItem('cart', JSON.stringify(newCart))
   }
 
-  // Hitung Total Bayar
   const totalAmount = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
 
-  // 2. Buka Modal Checkout
   const handleOpenCheckout = () => {
-    // Wajib Login untuk Memesan
     if (status === 'unauthenticated') {
       alert("Silakan Login terlebih dahulu untuk melakukan pemesanan!")
       router.push('/login')
       return
     }
-
     if (cart.length === 0) {
       alert("Keranjang belanja Anda kosong.")
       return
     }
-
     setIsModalOpen(true)
   }
 
-  // 3. PROSES ORDER KE API (Backend)
   const processOrder = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-
-    // Ambil ID User (jika ada)
     // @ts-ignore
     const userId = session?.user?.id ? Number(session.user.id) : null
-
     try {
       const res = await fetch('/api/orders', {
         method: 'POST',
@@ -115,28 +93,20 @@ export default function CartPage() {
         body: JSON.stringify({
           items: cart,
           user_id: userId,
-
-          // Data Pelanggan
           customer_name: formData.name,
           customer_phone: formData.phone || '-',
           table_number: formData.tableNumber || '-',
           type_order: formData.type,
-
-          // Data Pembayaran
           payment_method: formData.paymentMethod,
           total_price: totalAmount,
-
-          // Status Awal
           status: 'Pending'
         })
       })
-
       if (res.ok) {
-        // Jika Sukses: Kosongkan keranjang, tutup modal, pindah halaman
         localStorage.removeItem('cart')
         setCart([])
         setIsModalOpen(false)
-        router.push('/orders') // Arahkan ke halaman Riwayat Pesanan
+        router.push('/client-dashboard/orders')
       } else {
         const err = await res.json()
         throw new Error(err.error || "Gagal membuat pesanan")
@@ -148,153 +118,187 @@ export default function CartPage() {
     }
   }
 
-  // Loading State
   if (loading) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-2 bg-slate-50">
-      <Loader2 className="animate-spin text-blue-600" size={32} />
-      <p className="text-slate-500 font-bold">Memuat Keranjang...</p>
+    <div className="min-h-screen flex items-center justify-center bg-slate-950 overflow-hidden relative">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] animate-pulse"></div>
+
+      <div className="relative flex flex-col items-center">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-blue-500/20 rounded-full animate-pulse-ring"></div>
+
+        <div className="relative w-24 h-24 bg-slate-900 rounded-[2rem] border border-slate-800 shadow-2xl flex items-center justify-center animate-float">
+          <Coffee size={40} className="text-blue-500" strokeWidth={2.5} />
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex gap-1">
+            <div className="w-1.5 h-4 bg-blue-400/40 rounded-full animate-steam"></div>
+            <div className="w-1.5 h-6 bg-blue-400/20 rounded-full animate-steam [animation-delay:0.5s]"></div>
+          </div>
+        </div>
+        <div className="mt-12 text-center space-y-2">
+          <h2 className="text-xl font-black text-white uppercase tracking-[0.3em] animate-pulse">TEMALA.</h2>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.5em] ml-1">Menyiapkan Keranjang Anda</p>
+        </div>
+      </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans pb-32">
+    <div className="min-h-screen bg-slate-950 font-sans pb-32 selection:bg-blue-500/30">
 
-      {/* Header Halaman Cart */}
-      <div className="bg-white p-4 shadow-sm sticky top-0 z-10 flex items-center gap-4 border-b border-slate-100">
-        <Link href="/menu" className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition text-slate-700">
-          <ArrowLeft size={20} />
-        </Link>
-        <h1 className="font-bold text-lg text-slate-800">Keranjang Saya</h1>
+      {/* Header */}
+      <div className="bg-slate-900/80 backdrop-blur-xl p-6 sticky top-0 z-40 border-b border-slate-800 flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <Link href="/menu" className="p-3 bg-slate-800 rounded-2xl hover:bg-slate-700 transition-all text-white shadow-lg active:scale-90">
+            <ArrowLeft size={20} strokeWidth={3} />
+          </Link>
+          <div>
+            <h1 className="font-black text-2xl text-white uppercase tracking-tighter">Keranjang Saya</h1>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Temala Coffee Order</p>
+          </div>
+        </div>
+        <div className="hidden md:flex items-center gap-2 text-blue-500 font-black text-xs uppercase tracking-widest">
+          <CheckCircle2 size={16} />
+          Aman & Terenkripsi
+        </div>
       </div>
 
-      <div className="max-w-xl mx-auto p-4">
+      <div className="max-w-3xl mx-auto p-6">
         {cart.length === 0 ? (
-          // TAMPILAN JIKA KERANJANG KOSONG
-          <div className="text-center py-20 flex flex-col items-center animate-in fade-in zoom-in-95 duration-300">
-            <div className="bg-slate-200 p-6 rounded-full mb-4">
-              <Coffee size={48} className="text-slate-400" />
+          <div className="text-center py-32 flex flex-col items-center animate-in fade-in zoom-in-95 duration-500 bg-slate-900/20 rounded-[3rem] border-4 border-dashed border-slate-800">
+            <div className="bg-slate-950/50 p-10 rounded-full mb-8 border border-slate-800 shadow-inner">
+              <Coffee size={64} className="text-slate-700" strokeWidth={1} />
             </div>
-            <h2 className="text-xl font-bold text-slate-600 mb-1">Keranjang Kosong</h2>
-            <p className="text-slate-400 mb-6 text-sm">Wah, kamu belum memilih menu apapun nih.</p>
-            <Link href="/menu" className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 shadow-lg hover:shadow-blue-200 transition transform hover:-translate-y-1">
-              Lihat Menu
+            <h2 className="text-3xl font-black text-white uppercase tracking-tight mb-2">Keranjang Kosong</h2>
+            <p className="text-slate-500 font-medium mb-10 max-w-xs">Wah, kamu belum memilih menu apapun nih. Yuk, jelajahi menu lezat kami!</p>
+            <Link href="/menu" className="bg-blue-600 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-sm hover:bg-blue-700 shadow-xl shadow-blue-900/20 transition-all active:scale-95">
+              Lihat Menu Sekarang
             </Link>
           </div>
         ) : (
-          // TAMPILAN LIST ITEM DI KERANJANG
-          <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="space-y-8 animate-in slide-in-from-bottom-10 duration-500">
 
-            {/* List Item Loop */}
-            {cart.map((item) => (
-              <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex gap-4 items-center">
-
-                {/* Gambar Produk Kecil */}
-                <div className="w-20 h-20 bg-slate-100 rounded-lg overflow-hidden flex-shrink-0 relative border border-slate-200">
-                  {item.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300"><Coffee size={24} /></div>
-                  )}
-                </div>
-
-                {/* Info Produk */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-slate-800 line-clamp-1 text-base mb-1">{item.name}</h3>
-                  <p className="text-blue-600 font-bold text-sm">Rp {item.price.toLocaleString()}</p>
-                </div>
-
-                {/* Kontrol Quantity */}
-                <div className="flex flex-col items-end gap-3">
-                  <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-1 border border-slate-200">
-                    <button onClick={() => updateQty(item.id, -1)} className="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm hover:bg-slate-100 text-slate-600 transition"><Minus size={14} /></button>
-                    <span className="font-bold text-sm w-4 text-center text-slate-800">{item.quantity}</span>
-                    <button onClick={() => updateQty(item.id, 1)} className="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm hover:bg-slate-100 text-blue-600 transition"><Plus size={14} /></button>
-                  </div>
-                  <button onClick={() => removeItem(item.id)} className="text-xs text-red-500 hover:text-red-700 hover:underline flex items-center gap-1 font-medium transition">
-                    <Trash2 size={14} /> Hapus
-                  </button>
-                </div>
+            {/* List Items */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="h-px flex-1 bg-slate-800"></div>
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">Daftar Pesanan</span>
+                <div className="h-px flex-1 bg-slate-800"></div>
               </div>
-            ))}
 
-            {/* Ringkasan Pembayaran */}
-            <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 mt-6 sticky bottom-4">
-              <h3 className="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
-                <ShoppingBag size={18} className="text-slate-400" /> Ringkasan Pembayaran
+              {cart.map((item) => (
+                <div key={item.id} className="bg-slate-900/40 backdrop-blur-xl p-5 rounded-[2rem] border border-slate-800 flex gap-6 items-center group hover:border-blue-500/30 transition-all duration-500">
+                  <div className="w-24 h-24 bg-slate-950 rounded-2xl overflow-hidden flex-shrink-0 relative border border-slate-800 shadow-inner group-hover:scale-105 transition-transform duration-500">
+                    {item.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-800"><Coffee size={32} /></div>
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-black text-white uppercase tracking-tight text-lg group-hover:text-blue-400 transition-colors">{item.name}</h3>
+                    <p className="text-blue-500 font-black text-lg tracking-tighter mt-1">Rp {item.price.toLocaleString()}</p>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-4">
+                    <div className="flex items-center gap-4 bg-slate-950/50 rounded-xl p-1.5 border border-slate-800">
+                      <button onClick={() => updateQty(item.id, -1)} className="w-8 h-8 flex items-center justify-center bg-slate-800 rounded-lg hover:bg-slate-700 text-slate-400 transition-all active:scale-90"><Minus size={16} strokeWidth={3} /></button>
+                      <span className="font-black text-sm w-6 text-center text-white">{item.quantity}</span>
+                      <button onClick={() => updateQty(item.id, 1)} className="w-8 h-8 flex items-center justify-center bg-slate-800 rounded-lg hover:bg-slate-700 text-blue-500 transition-all active:scale-90"><Plus size={16} strokeWidth={3} /></button>
+                    </div>
+                    <button onClick={() => removeItem(item.id)} className="text-[10px] font-black text-red-500/50 hover:text-red-500 uppercase tracking-widest flex items-center gap-2 transition-all">
+                      <Trash2 size={14} /> Hapus
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Summary */}
+            <div className="bg-slate-900/40 backdrop-blur-xl p-8 rounded-[2.5rem] border border-slate-800 shadow-2xl relative overflow-hidden group">
+              <div className="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+
+              <h3 className="font-black text-white mb-8 border-b border-slate-800 pb-6 flex items-center gap-3 uppercase tracking-tight text-xl">
+                <ShoppingBag size={24} className="text-blue-500" /> Ringkasan Pembayaran
               </h3>
 
-              <div className="flex justify-between mb-2 text-slate-500 text-sm">
-                <span>Total Item</span>
-                <span className="font-medium">{cart.reduce((a, b) => a + b.quantity, 0)} item</span>
-              </div>
-
-              <div className="flex justify-between mb-6 text-slate-800">
-                <span className="font-bold text-lg">Total Bayar</span>
-                <span className="font-black text-xl text-blue-700">Rp {totalAmount.toLocaleString()}</span>
+              <div className="space-y-4 mb-10">
+                <div className="flex justify-between text-slate-500 text-xs font-black uppercase tracking-widest">
+                  <span>Total Item</span>
+                  <span className="text-slate-300">{cart.reduce((a, b) => a + b.quantity, 0)} item</span>
+                </div>
+                <div className="flex justify-between text-slate-500 text-xs font-black uppercase tracking-widest">
+                  <span>Pajak & Layanan</span>
+                  <span className="text-emerald-500">Termasuk</span>
+                </div>
+                <div className="h-px bg-slate-800 my-4"></div>
+                <div className="flex justify-between items-end">
+                  <span className="font-black text-slate-400 uppercase tracking-widest text-xs mb-1">Total Bayar</span>
+                  <span className="font-black text-4xl text-white tracking-tighter">Rp {totalAmount.toLocaleString()}</span>
+                </div>
               </div>
 
               <button
                 onClick={handleOpenCheckout}
-                className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-lg shadow-xl shadow-blue-200 hover:bg-blue-700 hover:scale-[1.01] transition-all flex justify-center items-center gap-2"
+                className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-blue-900/40 hover:bg-blue-700 transition-all flex justify-center items-center gap-3 active:scale-[0.98]"
               >
-                <Wallet size={20} /> PROSES PEMBAYARAN
+                <Wallet size={20} /> PROSES PEMBAYARAN <ArrowRight size={20} />
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* === MODAL POPUP CHECKOUT === */}
+      {/* Checkout Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          {/* Backdrop Click to Close (Optional) */}
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
           <div className="absolute inset-0" onClick={() => setIsModalOpen(false)}></div>
 
-          <div className="bg-white w-full max-w-lg rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-0 md:zoom-in-95 max-h-[90vh] overflow-y-auto relative z-10">
+          <div className="bg-slate-900 w-full max-w-xl rounded-[2.5rem] border border-slate-800 shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 md:zoom-in-95 max-h-[90vh] flex flex-col relative z-10">
 
-            {/* Modal Header */}
-            <div className="bg-blue-600 p-4 flex justify-between items-center text-white sticky top-0 z-10 shadow-md">
-              <h3 className="font-bold text-lg flex items-center gap-2"><Utensils size={20} /> Konfirmasi Pesanan</h3>
-              <button onClick={() => setIsModalOpen(false)} className="hover:bg-blue-700 p-1.5 rounded-full transition"><X size={24} /></button>
+            <div className="bg-slate-950/50 p-8 border-b border-slate-800 flex justify-between items-center sticky top-0 z-10">
+              <h3 className="font-black text-xl text-white flex items-center gap-3 uppercase tracking-tight"><Utensils size={24} className="text-blue-500" /> Konfirmasi Pesanan</h3>
+              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-800 rounded-full text-slate-500 hover:text-white transition-all"><X size={24} /></button>
             </div>
 
-            {/* Modal Form */}
-            <form onSubmit={processOrder} className="p-6 space-y-6 bg-slate-50">
+            <form onSubmit={processOrder} className="p-8 space-y-8 overflow-y-auto custom-scrollbar">
 
-              {/* 1. INFORMASI PELANGGAN */}
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">Informasi Pelanggan</h4>
+              {/* Customer Info */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-px flex-1 bg-slate-800"></div>
+                  <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Informasi Pelanggan</span>
+                  <div className="h-px flex-1 bg-slate-800"></div>
+                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Nama Pemesan</label>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nama Pemesan</label>
                   <div className="relative">
-                    <User size={18} className="absolute left-3 top-3 text-slate-400" />
-                    <input required type="text" className="w-full border border-slate-300 rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:border-blue-500 transition font-bold text-slate-700 bg-slate-50 focus:bg-white"
-                      placeholder="Nama Anda"
+                    <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
+                    <input required type="text" className="w-full bg-slate-950/50 border-2 border-slate-800 rounded-2xl pl-12 pr-6 py-4 focus:outline-none focus:border-blue-500 transition-all font-bold text-white placeholder:text-slate-700"
+                      placeholder="Nama Lengkap Anda"
                       value={formData.name}
                       onChange={e => setFormData({ ...formData, name: e.target.value })}
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">No. Meja</label>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">No. Meja</label>
                     <div className="relative">
-                      <MapPin size={18} className="absolute left-3 top-3 text-slate-400" />
-                      <input required type="text" className="w-full border border-slate-300 rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:border-blue-500 transition font-bold text-slate-700 bg-slate-50 focus:bg-white"
+                      <MapPin size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
+                      <input required type="text" className="w-full bg-slate-950/50 border-2 border-slate-800 rounded-2xl pl-12 pr-6 py-4 focus:outline-none focus:border-blue-500 transition-all font-black text-white placeholder:text-slate-700"
                         placeholder="Cth: 05"
                         value={formData.tableNumber}
                         onChange={e => setFormData({ ...formData, tableNumber: e.target.value })}
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">No. HP (Opsional)</label>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">No. HP</label>
                     <div className="relative">
-                      <Phone size={18} className="absolute left-3 top-3 text-slate-400" />
-                      <input type="tel" className="w-full border border-slate-300 rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:border-blue-500 transition font-medium text-slate-700 bg-slate-50 focus:bg-white"
+                      <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" />
+                      <input type="tel" className="w-full bg-slate-950/50 border-2 border-slate-800 rounded-2xl pl-12 pr-6 py-4 focus:outline-none focus:border-blue-500 transition-all font-bold text-white placeholder:text-slate-700"
                         placeholder="0812..."
                         value={formData.phone}
                         onChange={e => setFormData({ ...formData, phone: e.target.value })}
@@ -304,59 +308,49 @@ export default function CartPage() {
                 </div>
               </div>
 
-              {/* 2. JENIS PESANAN */}
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">Jenis Pesanan</h4>
-                <div className="grid grid-cols-2 gap-3">
+              {/* Order Type */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-px flex-1 bg-slate-800"></div>
+                  <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Jenis Pesanan</span>
+                  <div className="h-px flex-1 bg-slate-800"></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <button type="button" onClick={() => setFormData({ ...formData, type: 'Dine-in' })}
-                    className={`py-3 rounded-xl border-2 font-bold text-sm flex flex-col items-center gap-1 transition ${formData.type === 'Dine-in' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:border-blue-200 hover:bg-slate-50'}`}>
-                    <Utensils size={20} /> Makan di Tempat
+                    className={`p-6 rounded-3xl border-2 font-black text-xs uppercase tracking-widest flex flex-col items-center gap-3 transition-all ${formData.type === 'Dine-in' ? 'border-blue-600 bg-blue-600/10 text-white shadow-lg shadow-blue-900/20' : 'border-slate-800 text-slate-600 hover:border-slate-700'}`}>
+                    <Utensils size={24} /> Makan di Tempat
                   </button>
                   <button type="button" onClick={() => setFormData({ ...formData, type: 'Takeaway' })}
-                    className={`py-3 rounded-xl border-2 font-bold text-sm flex flex-col items-center gap-1 transition ${formData.type === 'Takeaway' ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-slate-200 text-slate-500 hover:border-orange-200 hover:bg-slate-50'}`}>
-                    <ShoppingBag size={20} /> Bawa Pulang
+                    className={`p-6 rounded-3xl border-2 font-black text-xs uppercase tracking-widest flex flex-col items-center gap-3 transition-all ${formData.type === 'Takeaway' ? 'border-orange-500 bg-orange-500/10 text-white shadow-lg shadow-orange-900/20' : 'border-slate-800 text-slate-600 hover:border-slate-700'}`}>
+                    <ShoppingBag size={24} /> Bawa Pulang
                   </button>
                 </div>
               </div>
 
-              {/* 3. METODE PEMBAYARAN */}
-              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2">Metode Pembayaran</h4>
-                <div className="grid grid-cols-2 gap-3">
+              {/* Payment Method */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-px flex-1 bg-slate-800"></div>
+                  <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Metode Pembayaran</span>
+                  <div className="h-px flex-1 bg-slate-800"></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
                   <button type="button" onClick={() => setFormData({ ...formData, paymentMethod: 'QRIS' })}
-                    className={`py-3 rounded-xl border-2 font-bold text-sm flex flex-col items-center gap-1 transition ${formData.paymentMethod === 'QRIS' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
-                    <QrCode size={20} /> QRIS (Scan)
+                    className={`p-6 rounded-3xl border-2 font-black text-xs uppercase tracking-widest flex flex-col items-center gap-3 transition-all ${formData.paymentMethod === 'QRIS' ? 'border-blue-600 bg-blue-600/10 text-white shadow-lg shadow-blue-900/20' : 'border-slate-800 text-slate-600 hover:border-slate-700'}`}>
+                    <QrCode size={24} /> QRIS (Scan)
                   </button>
-
                   <button type="button" onClick={() => setFormData({ ...formData, paymentMethod: 'Cash' })}
-                    className={`py-3 rounded-xl border-2 font-bold text-sm flex flex-col items-center gap-1 transition ${formData.paymentMethod === 'Cash' ? 'border-green-600 bg-green-50 text-green-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
-                    <Banknote size={20} /> Tunai / Kasir
+                    className={`p-6 rounded-3xl border-2 font-black text-xs uppercase tracking-widest flex flex-col items-center gap-3 transition-all ${formData.paymentMethod === 'Cash' ? 'border-emerald-500 bg-emerald-500/10 text-white shadow-lg shadow-emerald-900/20' : 'border-slate-800 text-slate-600 hover:border-slate-700'}`}>
+                    <Banknote size={24} /> Tunai / Kasir
                   </button>
-                </div>
-
-                {/* Info Pembayaran */}
-                <div className={`p-4 rounded-xl flex items-start gap-3 border text-sm mt-2 ${formData.paymentMethod === 'QRIS' ? 'bg-blue-50 border-blue-100 text-blue-800' : 'bg-green-50 border-green-100 text-green-800'}`}>
-                  <div className="bg-white p-2 rounded-full shadow-sm shrink-0">
-                    {formData.paymentMethod === 'QRIS' ? <QrCode size={18} /> : <Banknote size={18} />}
-                  </div>
-                  <div>
-                    <p className="font-bold mb-1">
-                      {formData.paymentMethod === 'QRIS' ? 'Bayar Pakai QRIS' : 'Bayar Tunai'}
-                    </p>
-                    <p className="text-xs opacity-80 leading-relaxed">
-                      {formData.paymentMethod === 'QRIS'
-                        ? 'Silakan scan stiker QRIS yang tersedia di meja atau kasir setelah pesanan dikonfirmasi.'
-                        : 'Silakan menuju kasir untuk melakukan pembayaran tunai setelah pesanan dibuat.'}
-                    </p>
-                  </div>
                 </div>
               </div>
 
-              {/* Tombol Submit Final */}
-              <div className="pt-2 sticky bottom-0 bg-slate-50 pb-2">
-                <button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-blue-700 transition disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2 transform active:scale-[0.98]">
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : null}
-                  {isSubmitting ? 'Memproses...' : 'KONFIRMASI PESANAN'}
+              {/* Submit */}
+              <div className="pt-4 sticky bottom-0 bg-slate-900 pb-2">
+                <button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-blue-900/40 hover:bg-blue-700 transition-all disabled:opacity-50 flex justify-center items-center gap-3 active:scale-[0.98]">
+                  {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : null}
+                  {isSubmitting ? 'MEMPROSES PESANAN...' : 'KONFIRMASI & BAYAR'}
                 </button>
               </div>
 

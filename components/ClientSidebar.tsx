@@ -2,6 +2,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import {
@@ -26,8 +27,15 @@ export default function ClientSidebar() {
     return (
         <aside className="w-64 bg-white border-r border-slate-200 h-screen fixed left-0 top-0 flex flex-col z-10">
             {/* Logo Area */}
-            <div className="h-16 flex items-center justify-center px-6 border-b border-slate-100 bg-gradient-to-r from-purple-600 to-purple-700">
-                <h2 className="text-white font-bold text-lg">Client Dashboard</h2>
+            <div className="h-16 flex items-center gap-3 px-6 border-b border-slate-100 bg-white">
+                <Image
+                    src="/logo.png"
+                    alt="Temala Logo"
+                    width={40}
+                    height={40}
+                    className="rounded-lg object-contain"
+                />
+                <span className="font-black text-slate-900 text-lg tracking-tight">Temala Coffee</span>
             </div>
 
             {/* Menu Items */}
@@ -39,8 +47,8 @@ export default function ClientSidebar() {
                             key={item.href}
                             href={item.href}
                             className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive
-                                    ? 'bg-purple-50 text-purple-600'
-                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                ? 'bg-purple-50 text-purple-600'
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                                 }`}
                         >
                             <item.icon size={20} className={`mr-3 ${isActive ? 'text-purple-600' : 'text-slate-400'}`} />

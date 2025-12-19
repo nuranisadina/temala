@@ -3,13 +3,13 @@
 
 import { useState, useEffect } from 'react'
 import {
-    LayoutDashboard, TrendingUp, Users, ShoppingBag,
-    DollarSign, Clock, ArrowUpRight, ArrowDownRight, Package,
-    Calendar, CheckCircle, AlertCircle
+    TrendingUp, ShoppingBag,
+    DollarSign, Clock, Users,
+    ArrowUpRight, Package,
+    CheckCircle, Calendar
 } from 'lucide-react'
 import Link from 'next/link'
 
-// Tipe Data Sederhana
 interface Order {
     id: number
     total_price: number
@@ -22,8 +22,6 @@ interface Order {
 export default function DashboardPage() {
     const [orders, setOrders] = useState<Order[]>([])
     const [loading, setLoading] = useState(true)
-
-    // Stats
     const [totalRevenue, setTotalRevenue] = useState(0)
     const [totalOrders, setTotalOrders] = useState(0)
     const [avgOrderValue, setAvgOrderValue] = useState(0)
@@ -48,160 +46,191 @@ export default function DashboardPage() {
 
     const processData = (data: Order[]) => {
         setOrders(data)
-
-        // 1. Total Revenue (Hanya yang Completed/Paid)
         const validOrders = data.filter(o => ['Paid', 'Completed'].includes(o.status))
         const revenue = validOrders.reduce((acc, curr) => acc + Number(curr.total_price), 0)
         setTotalRevenue(revenue)
-
-        // 2. Total Orders
         setTotalOrders(data.length)
-
-        // 3. Rata-rata Nilai Order
         setAvgOrderValue(validOrders.length > 0 ? revenue / validOrders.length : 0)
-
-        // 4. Pending
         setPendingOrders(data.filter(o => o.status === 'Pending').length)
     }
 
-    if (loading) return <div className="p-8 text-center font-bold text-slate-500">Memuat Dashboard...</div>
+    if (loading) return (
+        <div className="min-h-[60vh] flex items-center justify-center overflow-hidden relative">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-blue-600/5 rounded-full blur-[100px] animate-pulse"></div>
+
+            <div className="relative flex flex-col items-center">
+
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-blue-500/20 rounded-full animate-pulse-ring"></div>
+
+                <div className="relative w-16 h-16 bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl flex items-center justify-center animate-float">
+                    <LayoutDashboard size={28} className="text-blue-500" strokeWidth={2.5} />
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-0.5">
+                        <div className="w-1 h-3 bg-blue-400/40 rounded-full animate-steam"></div>
+                        <div className="w-1 h-4 bg-blue-400/20 rounded-full animate-steam [animation-delay:0.5s]"></div>
+                    </div>
+                </div>
+                <div className="mt-8 text-center">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] animate-pulse">Memuat Data Dashboard...</p>
+                </div>
+            </div>
+        </div>
+
+    )
 
     return (
-        <div className="p-6 space-y-8">
+        <div className="space-y-8 animate-in fade-in duration-700">
             {/* Header */}
-            <div className="flex justify-between items-end">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-800 dark:text-slate-100 uppercase tracking-tight">Dashboard Overview</h1>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium">Ringkasan performa bisnis hari ini.</p>
+                    <h1 className="text-4xl font-black text-white uppercase tracking-tighter">Dashboard Overview</h1>
+                    <p className="text-slate-400 font-medium">Ringkasan performa bisnis Temala Coffee hari ini.</p>
                 </div>
-                <div className="text-right">
-                    <p className="text-xs font-bold text-slate-400 uppercase">Tanggal</p>
-                    <p className="font-bold text-slate-700 dark:text-slate-300">{new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                <div className="text-left md:text-right bg-slate-900/50 backdrop-blur-md p-4 rounded-2xl border border-slate-800 shadow-xl">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">Tanggal Hari Ini</p>
+                    <p className="font-bold text-white text-lg">{new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                 </div>
             </div>
 
             {/* Metric Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Revenue Card */}
-                <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition">
-                    <div className="flex justify-between items-start">
+                <div className="bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-slate-800 shadow-2xl hover:shadow-emerald-900/10 transition-all group overflow-hidden relative">
+                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
+                    <div className="flex justify-between items-start relative z-10">
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Pendapatan</p>
-                            <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">Rp {totalRevenue.toLocaleString('id-ID')}</h3>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Total Pendapatan</p>
+                            <h3 className="text-2xl font-black text-white tracking-tight">Rp {totalRevenue.toLocaleString('id-ID')}</h3>
                         </div>
-                        <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400">
-                            <DollarSign size={20} />
+                        <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-500 group-hover:scale-110 transition-transform">
+                            <DollarSign size={24} strokeWidth={2.5} />
                         </div>
                     </div>
-                    <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-2">
-                        <TrendingUp size={14} /> +12.5% <span className="text-slate-400 font-normal ml-1">dari minggu lalu</span>
+                    <div className="flex items-center gap-2 text-[10px] font-black text-emerald-500 mt-4 relative z-10">
+                        <TrendingUp size={14} /> +12.5% <span className="text-slate-500 font-bold ml-1 uppercase">dari minggu lalu</span>
                     </div>
                 </div>
 
                 {/* Orders Card */}
-                <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition">
-                    <div className="flex justify-between items-start">
+                <div className="bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-slate-800 shadow-2xl hover:shadow-blue-900/10 transition-all group overflow-hidden relative">
+                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
+                    <div className="flex justify-between items-start relative z-10">
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Pesanan</p>
-                            <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">{totalOrders} <span className="text-sm font-medium text-slate-400 dark:text-slate-500">Trx</span></h3>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Total Pesanan</p>
+                            <h3 className="text-2xl font-black text-white tracking-tight">{totalOrders} <span className="text-xs font-medium text-slate-500 uppercase">Trx</span></h3>
                         </div>
-                        <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-                            <ShoppingBag size={20} />
+                        <div className="p-3 bg-blue-500/10 rounded-2xl text-blue-500 group-hover:scale-110 transition-transform">
+                            <ShoppingBag size={24} strokeWidth={2.5} />
                         </div>
                     </div>
                 </div>
 
                 {/* Pending Orders */}
-                <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition">
-                    <div className="flex justify-between items-start">
+                <div className="bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-slate-800 shadow-2xl hover:shadow-amber-900/10 transition-all group overflow-hidden relative">
+                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
+                    <div className="flex justify-between items-start relative z-10">
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Pesanan Pending</p>
-                            <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">{pendingOrders} <span className="text-sm font-medium text-slate-400 dark:text-slate-500">Antrian</span></h3>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Pesanan Pending</p>
+                            <h3 className="text-2xl font-black text-white tracking-tight">{pendingOrders} <span className="text-xs font-medium text-slate-500 uppercase">Antrian</span></h3>
                         </div>
-                        <div className="p-2 bg-amber-50 dark:bg-amber-500/10 rounded-lg text-amber-600 dark:text-amber-400">
-                            <Clock size={20} />
+                        <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-500 group-hover:scale-110 transition-transform">
+                            <Clock size={24} strokeWidth={2.5} />
                         </div>
                     </div>
-                    <div className="text-xs text-amber-600 dark:text-amber-400 font-bold mt-2">
+                    <div className="text-[10px] text-amber-500 font-black mt-4 uppercase tracking-wider relative z-10">
                         Butuh tindakan segera
                     </div>
                 </div>
 
                 {/* Avg Value */}
-                <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition">
-                    <div className="flex justify-between items-start">
+                <div className="bg-slate-900/40 backdrop-blur-xl p-6 rounded-3xl border border-slate-800 shadow-2xl hover:shadow-indigo-900/10 transition-all group overflow-hidden relative">
+                    <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500"></div>
+                    <div className="flex justify-between items-start relative z-10">
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Rata-rata Order</p>
-                            <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100">Rp {Math.round(avgOrderValue).toLocaleString('id-ID')}</h3>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Rata-rata Order</p>
+                            <h3 className="text-2xl font-black text-white tracking-tight">Rp {Math.round(avgOrderValue).toLocaleString('id-ID')}</h3>
                         </div>
-                        <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400">
-                            <Users size={20} />
+                        <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-500 group-hover:scale-110 transition-transform">
+                            <Users size={24} strokeWidth={2.5} />
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Recent Orders - Takes 2 Cols */}
-                <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2"><Clock size={20} className="text-slate-400" /> Pesanan Terbaru</h3>
-                        <Link href="/dashboard/reports" className="text-sm font-bold text-blue-600 hover:text-blue-700">Lihat Semua</Link>
+                <div className="lg:col-span-2 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-slate-800 shadow-2xl p-8">
+                    <div className="flex justify-between items-center mb-8">
+                        <h3 className="font-black text-xl text-white flex items-center gap-3 uppercase tracking-tight">
+                            <Clock size={24} className="text-slate-500" />
+                            Pesanan Terbaru
+                        </h3>
+                        <Link href="/dashboard/reports" className="text-xs font-black text-blue-500 hover:text-blue-400 uppercase tracking-widest border-b-2 border-blue-500/20 pb-1 transition-all">
+                            Lihat Semua
+                        </Link>
                     </div>
 
                     <div className="space-y-4">
                         {orders.slice(0, 5).map(order => (
-                            <div key={order.id} className="flex justify-between items-center p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl transition border border-transparent hover:border-slate-100 dark:hover:border-slate-600">
+                            <div key={order.id} className="flex justify-between items-center p-4 hover:bg-slate-800/50 rounded-2xl transition-all border border-transparent hover:border-slate-700 group">
                                 <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center font-bold text-slate-500 dark:text-slate-300 text-xs">
+                                    <div className="h-12 w-12 bg-slate-800 rounded-xl flex items-center justify-center font-black text-slate-400 text-xs border border-slate-700 group-hover:border-blue-500/50 transition-colors">
                                         #{order.id}
                                     </div>
                                     <div>
-                                        <p className="font-bold text-slate-800 dark:text-slate-100 text-sm">Pelanggan Umum</p>
-                                        <p className="text-xs text-slate-500">{new Date(order.created_at).toLocaleTimeString()} • {order.payment?.method || 'CASH'}</p>
+                                        <p className="font-black text-white text-sm uppercase tracking-wide">Pelanggan Umum</p>
+                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{new Date(order.created_at).toLocaleTimeString()} • {order.payment?.method || 'CASH'}</p>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-bold text-slate-800 dark:text-slate-100 text-sm">Rp {Number(order.total_price).toLocaleString()}</p>
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${order.status === 'Completed' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400' :
-                                        order.status === 'Pending' ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400' :
-                                            order.status === 'Paid' ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400' : 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
+                                    <p className="font-black text-white text-sm">Rp {Number(order.total_price).toLocaleString()}</p>
+                                    <span className={`text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest mt-1 inline-block ${order.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
+                                        order.status === 'Pending' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
+                                            order.status === 'Paid' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'
                                         }`}>
                                         {order.status}
                                     </span>
                                 </div>
                             </div>
                         ))}
-                        {orders.length === 0 && <p className="text-center text-slate-400 py-4">Belum ada transaksi.</p>}
+                        {orders.length === 0 && (
+                            <div className="text-center py-12 bg-slate-950/30 rounded-3xl border-2 border-dashed border-slate-800">
+                                <p className="text-slate-500 font-bold uppercase tracking-widest">Belum ada transaksi hari ini.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Quick Actions / Mini Stats - 1 Col */}
-                <div className="space-y-6">
+                <div className="space-y-8">
                     {/* Visual Chart Placeholder */}
-                    <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-6 text-white shadow-xl shadow-blue-900/20">
-                        <h3 className="font-bold text-lg mb-1">Target Hari Ini</h3>
-                        <div className="flex items-end gap-2 mb-4">
-                            <span className="text-4xl font-black">85%</span>
-                            <span className="text-blue-200 mb-1.5 font-bold">Tercapai</span>
+                    <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-blue-900/40 relative overflow-hidden group">
+                        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+                        <h3 className="font-black text-xl mb-1 uppercase tracking-tighter">Target Hari Ini</h3>
+                        <div className="flex items-end gap-2 mb-6">
+                            <span className="text-5xl font-black tracking-tighter">85%</span>
+                            <span className="text-blue-200 mb-2 font-black uppercase text-xs tracking-widest">Tercapai</span>
                         </div>
-                        <div className="w-full bg-blue-900/50 rounded-full h-2 mb-2">
-                            <div className="bg-yellow-400 h-2 rounded-full" style={{ width: '85%' }}></div>
+                        <div className="w-full bg-blue-950/40 rounded-full h-3 mb-3 p-0.5 border border-white/10">
+                            <div className="bg-gradient-to-r from-yellow-300 to-yellow-500 h-full rounded-full shadow-[0_0_10px_rgba(234,179,8,0.5)]" style={{ width: '85%' }}></div>
                         </div>
-                        <p className="text-xs text-blue-200 opacity-80">Rp 1.5jt lagi untuk capai target harian.</p>
+                        <p className="text-[10px] font-bold text-blue-100 uppercase tracking-widest opacity-80">Rp 1.5jt lagi untuk capai target harian.</p>
                     </div>
 
                     {/* Top Products Placeholder */}
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-6">
-                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2"><TrendingUp size={20} className="text-slate-400" /> Produk Terlaris</h3>
-                        <div className="space-y-3">
+                    <div className="bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-slate-800 shadow-2xl p-8">
+                        <h3 className="font-black text-lg text-white mb-6 flex items-center gap-3 uppercase tracking-tight">
+                            <TrendingUp size={20} className="text-slate-500" />
+                            Produk Terlaris
+                        </h3>
+                        <div className="space-y-4">
                             {[1, 2, 3].map((i) => (
-                                <div key={i} className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center font-bold text-slate-400 text-xs">{i}</div>
+                                <div key={i} className="flex items-center gap-4 group cursor-pointer">
+                                    <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center font-black text-slate-500 text-xs border border-slate-700 group-hover:border-blue-500/50 transition-all">{i}</div>
                                     <div className="flex-1">
-                                        <p className="text-sm font-bold text-slate-700">Kopi Susu Gula Aren</p>
-                                        <p className="text-xs text-slate-400">120 Terjual</p>
+                                        <p className="text-sm font-black text-slate-200 group-hover:text-white transition-colors uppercase tracking-wide">Kopi Susu Gula Aren</p>
+                                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">120 Terjual</p>
                                     </div>
+                                    <ArrowUpRight size={16} className="text-slate-600 group-hover:text-blue-500 transition-all" />
                                 </div>
                             ))}
                         </div>
