@@ -25,16 +25,15 @@ const handler = NextAuth({
           const isMatch = await bcrypt.compare(credentials.password, user.password);
           if (!isMatch) return null;
 
-          // Kita ambil role dari database (tulisannya "Admin")
           const roleFromDB = (user.role as any)?.role_name || "Pelanggan";
 
-          console.log("LOGIN BERHASIL - User:", user.email, "| Role dari DB:", roleFromDB);
+          console.log("LOGIN BERHASIL - User:", user.email, "| Role:", roleFromDB, "| ID:", user.id);
 
           return {
             id: String(user.id),
             name: user.name,
             email: user.email,
-            role: roleFromDB // Ini mengirim string "Admin"
+            role: roleFromDB
           };
         } catch (error) {
           console.error("Database Error:", error);
@@ -45,11 +44,12 @@ const handler = NextAuth({
   ],
   callbacks: {
     async signIn({ user }) {
-      // Auto redirect based on role after successful login
-      return true; // Allow sign in, redirect handled in other callback
+      return true;
     },
     async jwt({ token, user }) {
       if (user) {
+        // @ts-ignore - Menyimpan ID dan role ke token JWT
+        token.id = user.id;
         // @ts-ignore
         token.role = user.role;
       }
@@ -57,19 +57,15 @@ const handler = NextAuth({
     },
     async session({ session, token }) {
       if (session.user) {
+        // @ts-ignore - Menambahkan ID dan role ke session
+        session.user.id = token.id;
         // @ts-ignore
         session.user.role = token.role;
       }
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // If redirecting after sign in, check the user's role from the URL params
-      // This is a workaround since we can't access the session here directly
-
-      // If already on a specific page, stay there
       if (url.startsWith(baseUrl)) return url;
-
-      // Default to home page, client-side will handle role-based redirect
       return baseUrl;
     }
   },

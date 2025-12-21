@@ -46,7 +46,7 @@ export default function LoginPage() {
       } else if (role === 'pelanggan') {
         window.location.replace('/client-dashboard')
       } else {
-        window.location.replace('/')
+        window.location.replace('/client-dashboard')
       }
 
     } catch (err) {

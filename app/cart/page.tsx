@@ -5,7 +5,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { ArrowLeft, Trash2, Plus, Minus, Loader2, Coffee, User, Phone, MapPin, Utensils, ShoppingBag, X, QrCode, Banknote, Wallet, ArrowRight, CheckCircle2 } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowLeft, Trash2, Plus, Minus, Loader2, Coffee, User, Phone, MapPin, Utensils, ShoppingBag, X, QrCode, Banknote, Wallet, ArrowRight, CheckCircle2, Upload, ImageIcon, Tag } from 'lucide-react'
 
 interface CartItem {
   id: number
@@ -22,7 +23,21 @@ export default function CartPage() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [paymentProof, setPaymentProof] = useState<string | null>(null)
+  const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(null)
+
+  // Voucher states
+  const [voucherCode, setVoucherCode] = useState('')
+  const [voucherLoading, setVoucherLoading] = useState(false)
+  const [appliedVoucher, setAppliedVoucher] = useState<{
+    voucher_id: number
+    code: string
+    discount_amount: number
+    message: string
+  } | null>(null)
+  const [voucherError, setVoucherError] = useState('')
 
   const [formData, setFormData] = useState({
     name: '',
@@ -58,15 +73,75 @@ export default function CartPage() {
     })
     setCart(newCart)
     localStorage.setItem('cart', JSON.stringify(newCart))
+    // Reset voucher when cart changes
+    if (appliedVoucher) {
+      setAppliedVoucher(null)
+      setVoucherCode('')
+    }
   }
 
   const removeItem = (id: number) => {
     const newCart = cart.filter(item => item.id !== id)
     setCart(newCart)
     localStorage.setItem('cart', JSON.stringify(newCart))
+    // Reset voucher when cart changes
+    if (appliedVoucher) {
+      setAppliedVoucher(null)
+      setVoucherCode('')
+    }
   }
 
-  const totalAmount = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
+  const subtotalAmount = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
+  const discountAmount = appliedVoucher?.discount_amount || 0
+  const totalAmount = subtotalAmount - discountAmount
+
+  // Apply voucher
+  const applyVoucher = async () => {
+    if (!voucherCode.trim()) {
+      setVoucherError('Masukkan kode voucher')
+      return
+    }
+
+    setVoucherLoading(true)
+    setVoucherError('')
+
+    try {
+      const res = await fetch('/api/vouchers/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: voucherCode.trim().toUpperCase(),
+          total_price: subtotalAmount
+        })
+      })
+
+      const data = await res.json()
+
+      if (data.valid) {
+        setAppliedVoucher({
+          voucher_id: data.voucher_id,
+          code: data.code,
+          discount_amount: data.discount_amount,
+          message: data.message
+        })
+        setVoucherError('')
+      } else {
+        setVoucherError(data.error || 'Voucher tidak valid')
+        setAppliedVoucher(null)
+      }
+    } catch (error) {
+      setVoucherError('Gagal memproses voucher')
+      setAppliedVoucher(null)
+    } finally {
+      setVoucherLoading(false)
+    }
+  }
+
+  const removeVoucher = () => {
+    setAppliedVoucher(null)
+    setVoucherCode('')
+    setVoucherError('')
+  }
 
   const handleOpenCheckout = () => {
     if (status === 'unauthenticated') {
@@ -81,8 +156,68 @@ export default function CartPage() {
     setIsModalOpen(true)
   }
 
+  // Handle upload bukti pembayaran
+  const handleUploadProof = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validasi file
+    if (!file.type.startsWith('image/')) {
+      alert('Harap upload file gambar (JPG, PNG, dll)')
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Ukuran file maksimal 5MB')
+      return
+    }
+
+    // Preview
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      setPaymentProofPreview(event.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+
+    // Upload ke server
+    setIsUploading(true)
+    try {
+      const uploadFormData = new FormData()
+      uploadFormData.append('file', file)
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: uploadFormData
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        setPaymentProof(data.url)
+      } else {
+        throw new Error('Upload gagal')
+      }
+    } catch (error) {
+      alert('Gagal mengupload bukti pembayaran')
+      setPaymentProofPreview(null)
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const removePaymentProof = () => {
+    setPaymentProof(null)
+    setPaymentProofPreview(null)
+  }
+
   const processOrder = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validasi: Jika QRIS, wajib upload bukti
+    if (formData.paymentMethod === 'QRIS' && !paymentProof) {
+      alert('Silakan upload bukti pembayaran terlebih dahulu!')
+      return
+    }
+
     setIsSubmitting(true)
     // @ts-ignore
     const userId = session?.user?.id ? Number(session.user.id) : null
@@ -96,9 +231,12 @@ export default function CartPage() {
           customer_name: formData.name,
           customer_phone: formData.phone || '-',
           table_number: formData.tableNumber || '-',
-          type_order: formData.type,
+          type_order: formData.type === 'Dine-in' ? 'Dine In' : 'Take Away',
           payment_method: formData.paymentMethod,
+          payment_proof: paymentProof,
           total_price: totalAmount,
+          voucher_id: appliedVoucher?.voucher_id || null,
+          discount_amount: discountAmount,
           status: 'Pending'
         })
       })
@@ -106,6 +244,9 @@ export default function CartPage() {
         localStorage.removeItem('cart')
         setCart([])
         setIsModalOpen(false)
+        setPaymentProof(null)
+        setPaymentProofPreview(null)
+        setAppliedVoucher(null)
         router.push('/client-dashboard/orders')
       } else {
         const err = await res.json()
@@ -156,7 +297,7 @@ export default function CartPage() {
         </div>
         <div className="hidden md:flex items-center gap-2 text-blue-500 font-black text-xs uppercase tracking-widest">
           <CheckCircle2 size={16} />
-          Aman & Terenkripsi
+          Aman &amp; Terenkripsi
         </div>
       </div>
 
@@ -213,6 +354,51 @@ export default function CartPage() {
               ))}
             </div>
 
+            {/* Voucher Section */}
+            <div className="bg-slate-900/40 backdrop-blur-xl p-6 rounded-[2rem] border border-slate-800">
+              <div className="flex items-center gap-3 mb-4">
+                <Tag size={20} className="text-blue-500" />
+                <span className="font-black text-white uppercase tracking-tight">Punya Kode Voucher?</span>
+              </div>
+
+              {appliedVoucher ? (
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 size={20} className="text-emerald-500" />
+                    <div>
+                      <p className="font-bold text-emerald-400 text-sm">{appliedVoucher.code}</p>
+                      <p className="text-emerald-300 text-xs">{appliedVoucher.message}</p>
+                    </div>
+                  </div>
+                  <button onClick={removeVoucher} className="text-red-400 hover:text-red-500 p-2">
+                    <X size={18} />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    placeholder="Masukkan kode voucher"
+                    value={voucherCode}
+                    onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                    className="flex-1 bg-slate-950/50 border-2 border-slate-800 rounded-xl px-4 py-3 text-white font-bold uppercase tracking-widest text-sm focus:outline-none focus:border-blue-500 transition-all placeholder:text-slate-700 placeholder:normal-case placeholder:tracking-normal"
+                  />
+                  <button
+                    onClick={applyVoucher}
+                    disabled={voucherLoading}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-blue-700 transition-all disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {voucherLoading ? <Loader2 size={16} className="animate-spin" /> : null}
+                    Terapkan
+                  </button>
+                </div>
+              )}
+
+              {voucherError && (
+                <p className="text-red-400 text-xs font-bold mt-3">{voucherError}</p>
+              )}
+            </div>
+
             {/* Summary */}
             <div className="bg-slate-900/40 backdrop-blur-xl p-8 rounded-[2.5rem] border border-slate-800 shadow-2xl relative overflow-hidden group">
               <div className="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
@@ -226,6 +412,16 @@ export default function CartPage() {
                   <span>Total Item</span>
                   <span className="text-slate-300">{cart.reduce((a, b) => a + b.quantity, 0)} item</span>
                 </div>
+                <div className="flex justify-between text-slate-500 text-xs font-black uppercase tracking-widest">
+                  <span>Subtotal</span>
+                  <span className="text-slate-300">Rp {subtotalAmount.toLocaleString()}</span>
+                </div>
+                {appliedVoucher && (
+                  <div className="flex justify-between text-emerald-500 text-xs font-black uppercase tracking-widest">
+                    <span className="flex items-center gap-2"><Tag size={14} /> Diskon ({appliedVoucher.code})</span>
+                    <span>- Rp {discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-slate-500 text-xs font-black uppercase tracking-widest">
                   <span>Pajak & Layanan</span>
                   <span className="text-emerald-500">Termasuk</span>
@@ -346,12 +542,93 @@ export default function CartPage() {
                 </div>
               </div>
 
+              {/* Upload Bukti Pembayaran (hanya untuk QRIS) */}
+              {formData.paymentMethod === 'QRIS' && (
+                <div className="space-y-4 animate-in slide-in-from-top-4 duration-300">
+                  <div className="flex items-center gap-4">
+                    <div className="h-px flex-1 bg-slate-800"></div>
+                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Bukti Pembayaran</span>
+                    <div className="h-px flex-1 bg-slate-800"></div>
+                  </div>
+
+                  {/* QR Code Display */}
+                  <div className="bg-slate-950/50 p-6 rounded-2xl border border-slate-800 text-center">
+                    <div className="w-48 h-48 mx-auto bg-white p-4 rounded-xl mb-4">
+                      {/* Placeholder QR - Ganti dengan gambar QRIS asli */}
+                      <div className="w-full h-full bg-slate-200 rounded flex items-center justify-center">
+                        <QrCode size={80} className="text-slate-400" />
+                      </div>
+                    </div>
+                    <p className="text-slate-400 text-xs font-bold">Scan QR Code di atas untuk membayar</p>
+                    <p className="text-white font-black text-lg mt-2">Rp {totalAmount.toLocaleString()}</p>
+                  </div>
+
+                  {/* Upload Area */}
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Upload Bukti Transfer *</label>
+
+                    {paymentProofPreview ? (
+                      <div className="relative">
+                        <div className="relative w-full h-48 bg-slate-950 rounded-2xl overflow-hidden border-2 border-emerald-500/50">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={paymentProofPreview}
+                            alt="Bukti Pembayaran"
+                            className="w-full h-full object-contain"
+                          />
+                          {isUploading && (
+                            <div className="absolute inset-0 bg-slate-950/80 flex items-center justify-center">
+                              <Loader2 className="animate-spin text-blue-500" size={32} />
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={removePaymentProof}
+                          className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all"
+                        >
+                          <X size={16} />
+                        </button>
+                        {paymentProof && (
+                          <div className="absolute bottom-2 left-2 px-3 py-1.5 bg-emerald-500 text-white rounded-full text-xs font-bold flex items-center gap-1">
+                            <CheckCircle2 size={14} /> Terupload
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-40 bg-slate-950/50 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer hover:border-blue-500 transition-all group">
+                        <div className="flex flex-col items-center justify-center py-6">
+                          <div className="p-4 bg-slate-800 rounded-2xl mb-3 group-hover:bg-blue-600 transition-colors">
+                            <Upload size={24} className="text-slate-400 group-hover:text-white transition-colors" />
+                          </div>
+                          <p className="text-sm font-bold text-slate-400 group-hover:text-white transition-colors">Klik untuk upload bukti</p>
+                          <p className="text-xs text-slate-600 mt-1">PNG, JPG (Max. 5MB)</p>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleUploadProof}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Submit */}
               <div className="pt-4 sticky bottom-0 bg-slate-900 pb-2">
-                <button type="submit" disabled={isSubmitting} className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-blue-900/40 hover:bg-blue-700 transition-all disabled:opacity-50 flex justify-center items-center gap-3 active:scale-[0.98]">
+                <button
+                  type="submit"
+                  disabled={isSubmitting || (formData.paymentMethod === 'QRIS' && !paymentProof)}
+                  className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-blue-900/40 hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-3 active:scale-[0.98]"
+                >
                   {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : null}
-                  {isSubmitting ? 'MEMPROSES PESANAN...' : 'KONFIRMASI & BAYAR'}
+                  {isSubmitting ? 'MEMPROSES PESANAN...' : formData.paymentMethod === 'QRIS' ? 'KONFIRMASI PEMBAYARAN' : 'KONFIRMASI & BAYAR DI KASIR'}
                 </button>
+                {formData.paymentMethod === 'QRIS' && !paymentProof && (
+                  <p className="text-center text-amber-500 text-xs font-bold mt-3">* Upload bukti pembayaran untuk melanjutkan</p>
+                )}
               </div>
 
             </form>

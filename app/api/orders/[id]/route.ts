@@ -2,15 +2,15 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// PATCH: Update Status Pesanan (Misal: Kasir Terima Order Online -> Completed)
+// PATCH: Update Status Pesanan
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> } // FIX: Pakai Promise biar aman di Next.js terbaru
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
     const body = await request.json()
-    const { status } = body // Frontend kirim: { status: 'Completed' }
+    const { status } = body
 
     // 1. Update Status Order
     const updatedOrder = await prisma.order.update({
@@ -18,25 +18,22 @@ export async function PATCH(
       data: { status: status }
     })
 
-    // 2. LOGIKA TAMBAHAN: 
-    // Jika status berubah jadi 'Completed' (Diterima Kasir),
-    // Pastikan data Pembayaran (Payment) tercatat.
+    // 2. Update Payment Status sesuai Order Status
     if (status === 'Completed') {
-      const existPayment = await prisma.payment.findFirst({
-        where: { order_id: Number(id) }
+      await prisma.payment.updateMany({
+        where: { order_id: Number(id) },
+        data: {
+          status: 'Success',
+          verified_at: new Date()
+        }
       })
+    }
 
-      // Jika belum ada pembayaran (karena pesanan online), buatkan record pembayaran otomatis
-      if (!existPayment) {
-        await prisma.payment.create({
-          data: {
-            order_id: Number(id),
-            method: 'Cash', // Default Cash (atau bisa diupdate nanti)
-            status: 'Success',
-            amount: Number(updatedOrder.total_price)
-          }
-        })
-      }
+    if (status === 'Cancelled') {
+      await prisma.payment.updateMany({
+        where: { order_id: Number(id) },
+        data: { status: 'Failed' }
+      })
     }
 
     return NextResponse.json(updatedOrder)
@@ -46,25 +43,25 @@ export async function PATCH(
   }
 }
 
-// DELETE: Hapus Pesanan (Admin Only)
+// DELETE: Hapus Pesanan
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> } // FIX: Pakai Promise
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
 
-    // 1. Hapus Item Order dulu (Hapus anaknya)
+    // 1. Hapus Item Order dulu
     await prisma.orderItem.deleteMany({
       where: { order_id: Number(id) }
     })
 
-    // 2. Hapus Payment terkait (Hapus bukti bayar)
+    // 2. Hapus Payment terkait
     await prisma.payment.deleteMany({
       where: { order_id: Number(id) }
     })
 
-    // 3. Hapus Order Utama (Hapus induknya)
+    // 3. Hapus Order Utama
     await prisma.order.delete({
       where: { id: Number(id) }
     })

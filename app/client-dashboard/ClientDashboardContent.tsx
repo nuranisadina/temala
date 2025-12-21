@@ -1,10 +1,9 @@
 // app/client-dashboard/ClientDashboardContent.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect } from 'react'
 import Link from 'next/link'
 import { signOut } from 'next-auth/react'
 import {
@@ -15,12 +14,16 @@ import {
     LogOut,
     Coffee as LogoIcon,
     Menu,
-    Bell
+    Bell,
+    Coffee,
+    ShoppingCart
 } from 'lucide-react'
 import Image from 'next/image'
 
 const menuItems = [
     { name: 'Dashboard', href: '/client-dashboard', icon: LayoutDashboard },
+    { name: 'Menu', href: '/client-dashboard/menu', icon: Coffee },
+    { name: 'Keranjang', href: '/client-dashboard/cart', icon: ShoppingCart },
     { name: 'Pesanan Saya', href: '/client-dashboard/orders', icon: ShoppingBag },
     { name: 'Riwayat', href: '/client-dashboard/history', icon: History },
     { name: 'Profil', href: '/client-dashboard/profile', icon: User },
@@ -35,12 +38,35 @@ export default function ClientDashboardContent({
     const router = useRouter()
     const pathname = usePathname()
     const [isCollapsed, setIsCollapsed] = useState(false)
+    const [cartCount, setCartCount] = useState(0)
 
     useEffect(() => {
         if (status === 'unauthenticated') {
             router.push('/login')
         }
     }, [status, router])
+
+    // Get cart count from localStorage
+    useEffect(() => {
+        const updateCartCount = () => {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+            const count = cart.reduce((acc: number, item: any) => acc + item.quantity, 0)
+            setCartCount(count)
+        }
+
+        updateCartCount()
+
+        // Listen for storage changes
+        window.addEventListener('storage', updateCartCount)
+
+        // Custom event for cart updates
+        window.addEventListener('cartUpdated', updateCartCount)
+
+        return () => {
+            window.removeEventListener('storage', updateCartCount)
+            window.removeEventListener('cartUpdated', updateCartCount)
+        }
+    }, [])
 
     if (status === 'loading') {
         return (
@@ -90,6 +116,15 @@ export default function ClientDashboardContent({
 
                 {/* Right: User Actions */}
                 <div className="flex items-center gap-3">
+                    {/* Cart Quick Access */}
+                    <Link href="/client-dashboard/cart" className="relative p-2.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-all">
+                        <ShoppingCart size={20} strokeWidth={2.5} />
+                        {cartCount > 0 && (
+                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                {cartCount}
+                            </span>
+                        )}
+                    </Link>
                     <button className="relative p-2.5 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition-all">
                         <Bell size={20} strokeWidth={2.5} />
                         <span className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full ring-2 ring-white animate-pulse"></span>
@@ -132,6 +167,8 @@ export default function ClientDashboardContent({
                     {!isCollapsed && <div className="text-[10px] font-black text-slate-600 uppercase px-3 mb-3 tracking-wider animate-in fade-in">Menu Utama</div>}
                     {menuItems.map((item) => {
                         const isActive = pathname === item.href
+                        const isCart = item.href === '/client-dashboard/cart'
+
                         return (
                             <Link
                                 key={item.href}
@@ -142,7 +179,15 @@ export default function ClientDashboardContent({
                                     }`}
                                 title={isCollapsed ? item.name : ''}
                             >
-                                <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                                <div className="relative">
+                                    <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                                    {/* Cart badge in sidebar */}
+                                    {isCart && cartCount > 0 && !isActive && (
+                                        <span className="absolute -top-2 -right-2 w-4 h-4 bg-blue-600 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+                                            {cartCount}
+                                        </span>
+                                    )}
+                                </div>
                                 {!isCollapsed && <span className="ml-3 truncate animate-in fade-in slide-in-from-left-2 duration-300">{item.name}</span>}
 
                                 {/* Active Indicator */}
@@ -158,7 +203,8 @@ export default function ClientDashboardContent({
                                 )}
                             </Link>
                         )
-                    })}                </nav>
+                    })}
+                </nav>
 
                 {/* Logout Button */}
                 <div className="p-3 border-t border-slate-800 bg-slate-900">

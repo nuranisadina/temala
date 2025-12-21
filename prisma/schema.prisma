@@ -73,11 +73,33 @@ model Order {
   total_price    Float
   created_at     DateTime @default(now())
 
+  voucher_id     Int?
+  discount_amount Float   @default(0)
+
   user       User?       @relation(fields: [user_id], references: [id])
+  voucher    Voucher?    @relation(fields: [voucher_id], references: [id])
   orderItems OrderItem[]
   payment    Payment?
 
   @@map("orders")
+}
+
+model Voucher {
+  id           Int      @id @default(autoincrement())
+  code         String   @unique
+  discount     Float    // Persentase (0-100) atau Nominal
+  type         String   // 'PERCENTAGE' atau 'FIXED'
+  min_purchase Float    @default(0)
+  max_discount Float?   // Maksimal potongan (untuk persentase)
+  start_date   DateTime
+  end_date     DateTime
+  is_active    Boolean  @default(true)
+  usage_limit  Int?     // Batas penggunaan total
+  used_count   Int      @default(0)
+
+  orders       Order[]
+
+  @@map("vouchers")
 }
 
 model OrderItem {
@@ -94,12 +116,15 @@ model OrderItem {
 }
 
 model Payment {
-  id       Int      @id @default(autoincrement())
-  order_id Int      @unique
-  method   String   // QRIS, Cash
-  status   String   // Success, Failed
-  amount   Float
-  date     DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  order_id      Int      @unique
+  method        String   // QRIS, Cash
+  status        String   // Pending, Success, Failed
+  amount        Float
+  payment_proof String?  // URL bukti pembayaran (gambar)
+  verified_at   DateTime? // Waktu verifikasi oleh kasir/admin
+  verified_by   String?   // Nama yang memverifikasi
+  date          DateTime @default(now())
 
   order Order @relation(fields: [order_id], references: [id])
 

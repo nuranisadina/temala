@@ -18,7 +18,8 @@ export async function GET(request: Request) {
       where: whereClause,
       include: {
         user: true,
-        payment: true, // Tambahkan include payment agar info bayar muncul di Dashboard Kasir
+        payment: true,
+        voucher: true,
         orderItems: {
           include: {
             menu: true
@@ -28,10 +29,9 @@ export async function GET(request: Request) {
       orderBy: { created_at: 'desc' }
     })
 
-    // Format data agar sesuai dengan ekspektasi Frontend (menggunakan 'items')
+    // Format data untuk frontend
     const formattedOrders = orders.map((order: any) => ({
       ...order,
-      // Ubah orderItems menjadi items agar seragam dengan fungsi POST
       items: order.orderItems.map((item: any) => ({
         id: item.menu_id,
         name: item.menu.name,
@@ -59,9 +59,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Keranjang belanja kosong" }, { status: 400 })
     }
 
-    // Tentukan Status Awal
-    // Jika Online Order -> Pending, Jika Kasir/Manual -> Completed
-    const initialStatus = body.type_order === 'Online Order' ? 'Pending' : 'Completed'
+    // Tentukan Status Awal berdasarkan sumber order
+    // Jika ada user_id (dari client) -> Pending/Paid (menunggu verifikasi)
+    // Jika tanpa user_id (dari kasir) -> Completed (langsung selesai)
+    let initialStatus = 'Pending'
+
+    if (body.user_id) {
+      // Pesanan dari client - butuh verifikasi
+      initialStatus = body.payment_proof ? 'Paid' : 'Pending'
+    } else {
+      // Pesanan dari kasir - langsung selesai
+      initialStatus = 'Completed'
+    }
 
     // Mulai Transaksi Database (Atomic Transaction)
     const result = await prisma.$transaction(async (tx: any) => {
@@ -82,7 +91,22 @@ export async function POST(request: Request) {
         calculatedTotal += Number(menu.price) * item.quantity
       }
 
-      // B. Buat Record Order Utama
+      // B. Apply voucher discount if present
+      let finalTotal = calculatedTotal
+      const discountAmount = body.discount_amount || 0
+
+      if (body.voucher_id && discountAmount > 0) {
+        finalTotal = calculatedTotal - discountAmount
+        if (finalTotal < 0) finalTotal = 0
+
+        // Increment voucher used_count
+        await tx.voucher.update({
+          where: { id: body.voucher_id },
+          data: { used_count: { increment: 1 } }
+        })
+      }
+
+      // C. Buat Record Order Utama
       const newOrder = await tx.order.create({
         data: {
           customer_name: body.customer_name || 'Pelanggan Umum',
@@ -90,14 +114,15 @@ export async function POST(request: Request) {
           type_order: body.type_order || 'Dine In',
           table_number: body.table_number ? String(body.table_number) : null,
           status: initialStatus,
-          total_price: calculatedTotal,
+          total_price: finalTotal,
           user_id: body.user_id ? Number(body.user_id) : null,
+          voucher_id: body.voucher_id || null,
+          discount_amount: discountAmount,
         }
       })
 
-      // C. Simpan Detail Item & Update Stok secara Serial
+      // D. Simpan Detail Item & Update Stok secara Serial
       for (const item of body.items) {
-        // Simpan ke tabel OrderItem 
         await tx.orderItem.create({
           data: {
             order_id: newOrder.id,
@@ -114,29 +139,33 @@ export async function POST(request: Request) {
         })
       }
 
-      // D. Simpan Pembayaran (Hanya jika langsung lunas/dari Kasir)
-      if (initialStatus === 'Completed') {
-        await tx.payment.create({
-          data: {
-            order_id: newOrder.id,
-            method: body.payment_method || 'Cash',
-            status: 'Success',
-          }
-        })
-      }
+      // E. Simpan Pembayaran
+      const paymentMethod = body.payment_method || 'Cash'
+      const paymentStatus = initialStatus === 'Completed' ? 'Success' : 'Pending'
+
+      await tx.payment.create({
+        data: {
+          order_id: newOrder.id,
+          method: paymentMethod,
+          status: paymentStatus,
+          amount: finalTotal,
+          payment_proof: body.payment_proof || null,
+        }
+      })
 
       return newOrder
     })
 
     return NextResponse.json({
       success: true,
-      message: "Transaksi berhasil diproses",
+      message: body.payment_proof
+        ? "Pesanan berhasil, menunggu verifikasi pembayaran"
+        : "Transaksi berhasil diproses",
       orderId: result.id
     }, { status: 201 })
 
   } catch (error: any) {
     console.error("Transaction Error:", error.message)
-    // Kirim pesan error spesifik dari 'throw new Error' diatas ke frontend
     return NextResponse.json({ error: error.message || "Gagal memproses transaksi" }, { status: 500 })
   }
 }

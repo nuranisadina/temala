@@ -7,7 +7,8 @@ import { useSession, signOut } from 'next-auth/react'
 import {
     Search, ShoppingCart, Coffee, Plus, User, LogOut,
     LayoutDashboard, Monitor, ChevronDown, Menu as MenuIcon, X,
-    ShoppingBag, Star, Flame, Utensils, CupSoda, ChefHat, ArrowRight
+    ShoppingBag, Star, Flame, Utensils, CupSoda, ChefHat, ArrowRight,
+    Home, ClipboardList, Settings, Bell
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -32,7 +33,7 @@ interface CartItem {
 export default function MenuPage() {
     const { data: session, status } = useSession()
     // @ts-ignore
-    const userRole = session?.user?.role
+    const userRole = session?.user?.role?.toLowerCase()
 
     const [menus, setMenus] = useState<Menu[]>([])
     const [loading, setLoading] = useState(true)
@@ -95,28 +96,59 @@ export default function MenuPage() {
         { id: 'snack', label: 'Snack', icon: <ChefHat size={18} /> },
     ]
 
+    // Determine dashboard link based on role
+    const getDashboardLink = () => {
+        if (userRole === 'admin') return '/dashboard'
+        if (userRole === 'kasir') return '/kasir'
+        return '/client-dashboard'
+    }
+
     return (
         <div className="font-sans text-slate-200 bg-slate-950 min-h-screen pb-24 selection:bg-blue-500/30">
 
             {/* === NAVBAR === */}
             <nav className="bg-slate-900/80 backdrop-blur-xl text-white sticky top-0 z-50 border-b border-slate-800">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-                    {/* Logo Placeholder */}
-                    <Link href="/" className="flex items-center gap-2 group">
+                    {/* Logo */}
+                    <Link href={status === 'authenticated' ? getDashboardLink() : '/'} className="flex items-center gap-2 group">
                         <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/40 group-hover:scale-110 transition-transform">
                             <Coffee size={24} strokeWidth={2.5} />
                         </div>
                         <span className="font-black text-xl tracking-tighter uppercase">Temala.</span>
                     </Link>
 
-                    <div className="hidden md:flex gap-8 text-xs font-black uppercase tracking-widest items-center">
-                        <Link href="/" className="hover:text-blue-400 transition-colors">Beranda</Link>
-                        <Link href="/#about" className="hover:text-blue-400 transition-colors">Tentang</Link>
-                        <Link href="/menu" className="text-blue-500">Menu</Link>
-                        <Link href="/#promo" className="hover:text-blue-400 transition-colors">Promo</Link>
-                        <Link href="/#faq" className="hover:text-blue-400 transition-colors">FAQ</Link>
-                    </div>
+                    {/* Navigation Links - Different for logged in users */}
+                    {status === 'authenticated' ? (
+                        // Dashboard-style Navigation for logged in users
+                        <div className="hidden md:flex gap-6 text-xs font-black uppercase tracking-widest items-center">
+                            <Link href={getDashboardLink()} className="flex items-center gap-2 hover:text-blue-400 transition-colors">
+                                <Home size={16} /> Dashboard
+                            </Link>
+                            <Link href="/menu" className="flex items-center gap-2 text-blue-500">
+                                <Coffee size={16} /> Menu
+                            </Link>
+                            <Link href="/cart" className="flex items-center gap-2 hover:text-blue-400 transition-colors relative">
+                                <ShoppingCart size={16} /> Keranjang
+                                {totalItems > 0 && (
+                                    <span className="absolute -top-2 -right-4 bg-blue-600 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">{totalItems}</span>
+                                )}
+                            </Link>
+                            <Link href="/client-dashboard/orders" className="flex items-center gap-2 hover:text-blue-400 transition-colors">
+                                <ClipboardList size={16} /> Pesanan
+                            </Link>
+                        </div>
+                    ) : (
+                        // Landing page Navigation for guests
+                        <div className="hidden md:flex gap-8 text-xs font-black uppercase tracking-widest items-center">
+                            <Link href="/" className="hover:text-blue-400 transition-colors">Beranda</Link>
+                            <Link href="/#about" className="hover:text-blue-400 transition-colors">Tentang</Link>
+                            <Link href="/menu" className="text-blue-500">Menu</Link>
+                            <Link href="/#promo" className="hover:text-blue-400 transition-colors">Promo</Link>
+                            <Link href="/#faq" className="hover:text-blue-400 transition-colors">FAQ</Link>
+                        </div>
+                    )}
 
+                    {/* Right Side - Profile/Auth */}
                     <div className="hidden md:flex gap-4 items-center">
                         {status === 'authenticated' ? (
                             <div className="relative">
@@ -127,11 +159,26 @@ export default function MenuPage() {
                                 </button>
                                 {isProfileOpen && (
                                     <div className="absolute right-0 mt-3 w-64 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl py-3 text-slate-300 z-50 animate-in fade-in zoom-in-95 duration-200">
-                                        <div className="px-5 py-3 border-b border-slate-800 text-[10px] text-slate-500 font-black uppercase tracking-widest">Halo, {userRole || 'Pelanggan'}</div>
+                                        <div className="px-5 py-3 border-b border-slate-800 text-[10px] text-slate-500 font-black uppercase tracking-widest">
+                                            Role: {userRole || 'Pelanggan'}
+                                        </div>
                                         <div className="p-2 space-y-1">
-                                            {userRole === 'Admin' && <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-sm font-bold rounded-2xl transition"><LayoutDashboard size={18} className="text-blue-500" /> Dashboard Admin</Link>}
-                                            {userRole === 'Kasir' && <Link href="/kasir" className="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-sm font-bold rounded-2xl transition"><Monitor size={18} className="text-emerald-500" /> Panel Kasir</Link>}
-                                            <Link href="/client-dashboard" className="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-sm font-bold rounded-2xl transition"><ShoppingBag size={18} className="text-amber-500" /> Dashboard Saya</Link>
+                                            {userRole === 'admin' && (
+                                                <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-sm font-bold rounded-2xl transition">
+                                                    <LayoutDashboard size={18} className="text-blue-500" /> Dashboard Admin
+                                                </Link>
+                                            )}
+                                            {userRole === 'kasir' && (
+                                                <Link href="/kasir" className="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-sm font-bold rounded-2xl transition">
+                                                    <Monitor size={18} className="text-emerald-500" /> Panel Kasir
+                                                </Link>
+                                            )}
+                                            <Link href="/client-dashboard" className="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-sm font-bold rounded-2xl transition">
+                                                <ShoppingBag size={18} className="text-amber-500" /> Dashboard Saya
+                                            </Link>
+                                            <Link href="/client-dashboard/orders" className="flex items-center gap-3 px-4 py-3 hover:bg-slate-800 text-sm font-bold rounded-2xl transition">
+                                                <ClipboardList size={18} className="text-blue-500" /> Pesanan Saya
+                                            </Link>
                                         </div>
                                         <div className="border-t border-slate-800 mt-2 pt-2 p-2">
                                             <button onClick={() => signOut()} className="w-full text-left px-4 py-3 hover:bg-red-500/10 text-sm font-bold text-red-500 flex items-center gap-3 rounded-2xl transition">
@@ -155,14 +202,38 @@ export default function MenuPage() {
                 {/* Mobile Menu */}
                 {isMenuOpen && (
                     <div className="md:hidden bg-slate-900 p-6 space-y-4 border-t border-slate-800 animate-in slide-in-from-top-5">
-                        <Link href="/" className="block text-sm font-black uppercase tracking-widest text-slate-400">Beranda</Link>
-                        <Link href="/menu" className="block text-sm font-black uppercase tracking-widest text-blue-500">Menu</Link>
-                        <Link href="/#promo" className="block text-sm font-black uppercase tracking-widest text-slate-400">Promo</Link>
-                        {!session && (
-                            <div className="pt-4 flex flex-col gap-3">
-                                <Link href="/login" className="w-full py-3 text-center border border-slate-800 rounded-2xl text-xs font-black uppercase tracking-widest">Log In</Link>
-                                <Link href="/register" className="w-full py-3 text-center bg-blue-600 rounded-2xl text-xs font-black uppercase tracking-widest">Register</Link>
-                            </div>
+                        {status === 'authenticated' ? (
+                            // Dashboard links for logged in mobile users
+                            <>
+                                <Link href={getDashboardLink()} className="flex items-center gap-3 text-sm font-black uppercase tracking-widest text-slate-400">
+                                    <Home size={18} /> Dashboard
+                                </Link>
+                                <Link href="/menu" className="flex items-center gap-3 text-sm font-black uppercase tracking-widest text-blue-500">
+                                    <Coffee size={18} /> Menu
+                                </Link>
+                                <Link href="/cart" className="flex items-center gap-3 text-sm font-black uppercase tracking-widest text-slate-400">
+                                    <ShoppingCart size={18} /> Keranjang ({totalItems})
+                                </Link>
+                                <Link href="/client-dashboard/orders" className="flex items-center gap-3 text-sm font-black uppercase tracking-widest text-slate-400">
+                                    <ClipboardList size={18} /> Pesanan Saya
+                                </Link>
+                                <div className="pt-4 border-t border-slate-800">
+                                    <button onClick={() => signOut()} className="flex items-center gap-3 text-sm font-black uppercase tracking-widest text-red-500">
+                                        <LogOut size={18} /> Keluar
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            // Landing page links for guests mobile
+                            <>
+                                <Link href="/" className="block text-sm font-black uppercase tracking-widest text-slate-400">Beranda</Link>
+                                <Link href="/menu" className="block text-sm font-black uppercase tracking-widest text-blue-500">Menu</Link>
+                                <Link href="/#promo" className="block text-sm font-black uppercase tracking-widest text-slate-400">Promo</Link>
+                                <div className="pt-4 flex flex-col gap-3">
+                                    <Link href="/login" className="w-full py-3 text-center border border-slate-800 rounded-2xl text-xs font-black uppercase tracking-widest">Log In</Link>
+                                    <Link href="/register" className="w-full py-3 text-center bg-blue-600 rounded-2xl text-xs font-black uppercase tracking-widest">Register</Link>
+                                </div>
+                            </>
                         )}
                     </div>
                 )}
