@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
-import { Coffee, Plus, MapPin, Instagram, Facebook, Phone, Menu as MenuIcon, X, LogOut, LayoutDashboard, Monitor, HelpCircle, ChevronDown, User, ShoppingBag, ArrowRight, Loader2, Calendar } from 'lucide-react'
+import { Coffee, Plus, MapPin, Instagram, Facebook, Phone, Menu as MenuIcon, X, LogOut, LayoutDashboard, Monitor, HelpCircle, ChevronDown, User, ShoppingBag, ArrowRight, Loader2, Calendar, ExternalLink, Navigation, CornerUpRight } from 'lucide-react'
 import PromoBanner from '@/components/PromoBanner'
 
 // --- TIPE DATA ---
@@ -121,11 +121,11 @@ export default function HomePage() {
     if (status === 'authenticated' && (userRole?.toLowerCase() === 'admin' || userRole?.toLowerCase() === 'kasir')) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-950 overflow-hidden relative">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] animate-pulse"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-400/10 rounded-full blur-[120px] animate-pulse"></div>
                 <div className="relative flex flex-col items-center">
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-blue-500/20 rounded-full animate-pulse-ring"></div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-blue-400/20 rounded-full animate-pulse-ring"></div>
                     <div className="relative w-24 h-24 bg-slate-900 rounded-[2rem] border border-slate-800 shadow-2xl flex items-center justify-center animate-float">
-                        <Coffee size={40} className="text-blue-500" strokeWidth={2.5} />
+                        <Coffee size={40} className="text-blue-400" strokeWidth={2.5} />
                     </div>
                     <div className="mt-12 text-center space-y-2">
                         <h2 className="text-xl font-black text-white uppercase tracking-[0.3em] animate-pulse">TEMALA.</h2>
@@ -161,7 +161,7 @@ export default function HomePage() {
                         {status === 'authenticated' ? (
                             <div className="relative">
                                 <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="flex items-center gap-2 bg-blue-800/50 hover:bg-blue-800 px-3 py-1.5 rounded-full transition border border-blue-500">
-                                    <div className="w-8 h-8 bg-white text-blue-700 rounded-full flex items-center justify-center"><User size={18} /></div>
+                                    <div className="w-8 h-8 bg-white text-blue-500 rounded-full flex items-center justify-center"><User size={18} /></div>
                                     <span className="text-sm font-bold pr-1">{session?.user?.name}</span>
                                     <ChevronDown size={14} className={`transition ${isProfileOpen ? 'rotate-180' : ''}`} />
                                 </button>
@@ -169,7 +169,7 @@ export default function HomePage() {
                                     <div className="absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-xl py-2 text-slate-800 border border-slate-100 z-50 animate-in fade-in zoom-in-95 duration-200">
                                         <div className="px-4 py-2 border-b text-xs text-slate-500 font-bold uppercase tracking-wider bg-slate-50 rounded-t-xl">Halo, {userRole || 'Pelanggan'}</div>
                                         <div className="p-1 space-y-1">
-                                            {userRole === 'Admin' && <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 text-blue-700 text-sm font-bold rounded-lg transition"><LayoutDashboard size={16} /> Dashboard</Link>}
+                                            {userRole === 'Admin' && <Link href="/dashboard" className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 text-blue-500 text-sm font-bold rounded-lg transition"><LayoutDashboard size={16} /> Dashboard</Link>}
                                             {userRole === 'Kasir' && <Link href="/pos" className="flex items-center gap-2 px-4 py-2 hover:bg-green-50 text-green-700 text-sm font-bold rounded-lg transition"><Monitor size={16} /> POS Kasir</Link>}
                                             {userRole === 'Pelanggan' && <Link href="/client-dashboard" className="flex items-center gap-2 px-4 py-2 hover:bg-purple-50 text-purple-700 text-sm font-bold rounded-lg transition"><LayoutDashboard size={16} /> Dashboard Saya</Link>}
                                         </div>
@@ -182,7 +182,7 @@ export default function HomePage() {
                         ) : (
                             <>
                                 <Link href="/login" className="text-white font-bold text-sm hover:text-blue-200 transition">Log In</Link>
-                                <Link href="/register" className="bg-white text-blue-700 px-5 py-2 rounded-full text-sm font-bold hover:bg-slate-100 transition shadow-lg shadow-blue-900/20">Register</Link>
+                                <Link href="/register" className="bg-white text-blue-500 px-5 py-2 rounded-full text-sm font-bold hover:bg-slate-100 transition shadow-lg shadow-blue-900/20">Register</Link>
                             </>
                         )}
                     </div>
@@ -210,7 +210,7 @@ export default function HomePage() {
                             ) : (
                                 <div className="grid grid-cols-2 gap-3">
                                     <Link href="/login" className="block text-center border border-slate-300 py-2 rounded font-bold text-white hover:bg-slate-700 transition">Log In</Link>
-                                    <Link href="/register" className="block text-center bg-white text-blue-700 py-2 rounded font-bold">Register</Link>
+                                    <Link href="/register" className="block text-center bg-white text-blue-500 py-2 rounded font-bold">Register</Link>
                                 </div>
                             )}
                         </div>
@@ -349,7 +349,7 @@ export default function HomePage() {
                                 )}
                                 <div className="relative z-10 text-center p-6 w-full">
                                     <h3 className="text-3xl md:text-4xl font-black text-white tracking-widest drop-shadow-lg uppercase mb-2">{event.title}</h3>
-                                    <div className="inline-block bg-blue-600/80 backdrop-blur-sm px-4 py-2 rounded-full border border-blue-400/30">
+                                    <div className="inline-block bg-blue-400/80 backdrop-blur-sm px-4 py-2 rounded-full border border-blue-400/30">
                                         <p className="text-white font-bold text-sm tracking-wider">
                                             {event.content || 'Segera Hadir'}
                                         </p>
@@ -372,11 +372,11 @@ export default function HomePage() {
                     <h2 className="text-4xl font-black text-slate-900 mb-8">FAQ</h2>
                     <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 text-left space-y-4">
                         <div className="border-b pb-4">
-                            <h4 className="font-bold flex items-center gap-2"><HelpCircle size={18} className="text-blue-600" /> Jam berapa Temala buka?</h4>
+                            <h4 className="font-bold flex items-center gap-2"><HelpCircle size={18} className="text-blue-400" /> Jam berapa Temala buka?</h4>
                             <p className="text-slate-500 mt-1 pl-7">Kami buka setiap hari dari jam 08.00 pagi sampai 23.00 malam.</p>
                         </div>
                         <div>
-                            <h4 className="font-bold flex items-center gap-2"><HelpCircle size={18} className="text-blue-600" /> Apakah ada WiFi?</h4>
+                            <h4 className="font-bold flex items-center gap-2"><HelpCircle size={18} className="text-blue-400" /> Apakah ada WiFi?</h4>
                             <p className="text-slate-500 mt-1 pl-7">Tentu! Kami menyediakan WiFi kencang gratis untuk pelanggan.</p>
                         </div>
                     </div>
@@ -388,17 +388,44 @@ export default function HomePage() {
                 <div className="max-w-6xl mx-auto px-6">
                     <div className="text-center mb-10">
                         <h2 className="text-4xl font-black text-slate-900 mb-4">LOKASI</h2>
-                        <p className="text-slate-600 text-lg">Temukan kami di jantung kota Pekanbaru</p>
+                        <p className="text-slate-600 text-lg">Temukan kami di Perawang, Siak</p>
                     </div>
-                    <div className="w-full h-[350px] bg-slate-100 rounded-2xl overflow-hidden shadow-lg mb-8">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d127643.17675466235!2d101.36087658671875!3d0.5070677999999999!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31d5ab80690ee7b1%3A0x94dfe2c74a516c2d!2sPekanbaru%2C%20Riau!5e0!3m2!1sen!2sid!4v1702897654321!5m2!1sen!2sid" width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" title="Lokasi Temala Coffee" />
+                    <div className="relative w-full h-[450px] bg-slate-100 rounded-2xl overflow-hidden shadow-lg mb-8 group">
+                        <iframe
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.664186469836!2d101.6025!3d0.6555!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMMKwMzknMTkuOCJOIDEwMcKwMzYnMDkuMCJF!5e0!3m2!1sen!2sid!4v1635730000000!5m2!1sen!2sid&q=MJC2+PC2,+Perawang,+Kec.+Tualang,+Kabupaten+Siak,+Riau+28685"
+                            width="100%"
+                            height="100%"
+                            style={{ border: 0 }}
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            title="Lokasi Temala Coffee"
+                        />
+
+                        {/* Custom Overlay Card */}
+                        <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-md max-w-[320px] z-10 fade-in border border-slate-100">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h3 className="font-bold text-slate-900 text-base">Temala Coffee</h3>
+                                    <p className="text-slate-600 text-xs mt-1 leading-relaxed">MJC2+PC2, Perawang, Kec. Tualang, Kab. Siak, Riau 28685</p>
+                                </div>
+                                <a href="https://maps.app.goo.gl/H4orMV3G4rBHngdH7" target="_blank" className="flex flex-col items-center text-blue-500 hover:text-blue-600 ml-3 flex-shrink-0 group/icon">
+                                    <div className="w-9 h-9 bg-white border border-blue-100 rounded-lg shadow-sm flex items-center justify-center mb-1 group-hover/icon:bg-blue-50 transition">
+                                        <CornerUpRight size={20} className="text-blue-500" />
+                                    </div>
+                                    <span className="text-[10px] font-bold text-blue-500">Rute</span>
+                                </a>
+                            </div>
+                            <a href="https://maps.app.goo.gl/H4orMV3G4rBHngdH7" target="_blank" className="block mt-3 text-blue-500 text-xs font-bold hover:underline">Lihat peta lebih besar</a>
+                        </div>
                     </div>
+
                     <div className="bg-slate-50 rounded-2xl p-8">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                             <div>
                                 <div className="flex items-center justify-center mb-3"><MapPin className="text-blue-400" size={28} /></div>
                                 <h3 className="font-bold text-slate-900 mb-2">Alamat</h3>
-                                <p className="text-slate-600 text-sm">Jl. Temala No. 1<br />Pekanbaru, Riau</p>
+                                <p className="text-slate-600 text-sm">MJC2+PC2, Perawang<br />Kec. Tualang, Kab. Siak, Riau 28685</p>
                             </div>
                             <div>
                                 <div className="flex items-center justify-center mb-3"><Coffee className="text-blue-400" size={28} /></div>
@@ -440,7 +467,7 @@ export default function HomePage() {
                     <div>
                         <h4 className="font-bold text-lg mb-4 text-slate-200">Kontak Kami</h4>
                         <ul className="space-y-3 text-sm text-slate-400">
-                            <li className="flex items-start gap-2"><MapPin size={16} className="text-blue-400 mt-0.5 flex-shrink-0" /><span>Jl. Temala No. 1, Pekanbaru, Riau</span></li>
+                            <li className="flex items-start gap-2"><MapPin size={16} className="text-blue-400 mt-0.5 flex-shrink-0" /><span>MJC2+PC2, Perawang, Siak</span></li>
                             <li className="flex items-start gap-2"><Phone size={16} className="text-blue-400 mt-0.5 flex-shrink-0" /><a href="tel:+6281234567890" className="hover:text-blue-400 transition">+62 812-3456-7890</a></li>
                             <li className="flex items-start gap-2"><svg className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg><a href="mailto:info@temalacoffee.com" className="hover:text-blue-400 transition">info@temalacoffee.com</a></li>
                         </ul>
